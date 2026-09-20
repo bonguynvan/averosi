@@ -6,18 +6,24 @@
 <title>Bonv</title>
 <meta name="description" content="Bonv — Adobe Analytics tooling & tag QA." />
 <link rel="icon" type="image/png" href="favicon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
   :root {
     color-scheme: dark;
-    --bg: #0b0d10;
+    --bg: #0a0c0f;
     --bg-raised: #12151a;
     --border: #22262d;
-    --text: #e6e8eb;
+    --border-hover: #333a44;
+    --text: #eef0f2;
     --text-dim: #8b93a1;
+    --text-faint: #565f6b;
     --accent: #7ee787;
+    --accent-soft: #a8f0ad;
     --accent-dim: #3d6b42;
-    --mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
-    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+    --sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 
   * { box-sizing: border-box; }
@@ -28,99 +34,217 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg);
+    background:
+      radial-gradient(60vmax 40vmax at 50% -10%, rgba(126, 231, 135, 0.10), transparent 60%),
+      linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      var(--bg);
+    background-size: auto, 34px 34px, 34px 34px, auto;
+    background-position: center, center, center, center;
     color: var(--text);
     font-family: var(--sans);
-    padding: 1.5rem;
+    padding: 2rem 1.5rem;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .card { animation: rise 500ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .card {
-    max-width: 420px;
+    max-width: 400px;
     width: 100%;
     text-align: center;
   }
 
+  .mark-wrap {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1.5rem;
+  }
+
+  .mark-glow {
+    position: absolute;
+    inset: -18px;
+    background: radial-gradient(circle, rgba(126, 231, 135, 0.32), transparent 70%);
+    filter: blur(2px);
+    z-index: 0;
+  }
+
   .mark {
-    width: 56px;
-    height: 56px;
-    margin: 0 auto 1.25rem;
+    position: relative;
+    z-index: 1;
+    width: 64px;
+    height: 64px;
     display: block;
+    filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.4));
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.6rem;
   }
 
   h1 {
-    font-size: 1.6rem;
-    font-weight: 650;
-    letter-spacing: -0.01em;
-    margin: 0 0 0.4rem;
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.5rem;
   }
 
   p.tagline {
     color: var(--text-dim);
     font-size: 0.95rem;
-    margin: 0 0 1.75rem;
+    line-height: 1.5;
+    margin: 0 0 2rem;
   }
 
   .links {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: 0.65rem;
   }
 
   .links a {
-    display: block;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
     background: var(--bg-raised);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    padding: 0.8rem 1rem;
     color: var(--text);
     text-decoration: none;
     font-size: 0.9rem;
-    transition: border-color 120ms ease, transform 80ms ease;
+    text-align: left;
+    transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
   }
 
-  .links a:hover {
+  .links a:hover,
+  .links a:focus-visible {
     border-color: var(--accent-dim);
+    background: #161a20;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px -12px rgba(126, 231, 135, 0.25);
   }
 
   .links a:active {
-    transform: translateY(1px);
+    transform: translateY(0);
+  }
+
+  .links a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .link-icon {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    color: var(--text-dim);
+    transition: color 160ms ease;
+  }
+
+  .links a:hover .link-icon,
+  .links a:focus-visible .link-icon {
+    color: var(--accent);
+  }
+
+  .link-text {
+    flex: 1;
+    min-width: 0;
   }
 
   .links .label {
-    color: var(--text-dim);
+    color: var(--text-faint);
     font-family: var(--mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.04em;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     display: block;
-    margin-bottom: 0.15rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .link-arrow {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    color: var(--text-faint);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 160ms ease, transform 160ms ease;
+  }
+
+  .links a:hover .link-arrow,
+  .links a:focus-visible .link-arrow {
+    opacity: 1;
+    transform: translateX(0);
   }
 
   footer {
-    margin-top: 2rem;
-    color: var(--text-dim);
-    font-size: 0.75rem;
+    margin-top: 2.25rem;
+    color: var(--text-faint);
+    font-size: 0.76rem;
+    font-family: var(--mono);
   }
 </style>
 </head>
 <body>
   <div class="card">
-    <img class="mark" src="favicon.png" alt="" aria-hidden="true" width="56" height="56" />
+    <div class="mark-wrap">
+      <div class="mark-glow" aria-hidden="true"></div>
+      <img class="mark" src="favicon.png" alt="" aria-hidden="true" width="64" height="64" />
+    </div>
+
+    <p class="eyebrow">Adobe Analytics toolkit</p>
     <h1>Bonv</h1>
-    <p class="tagline">Adobe Analytics tooling &amp; tag QA</p>
+    <p class="tagline">Programmatic tag QA for CI, plus a free client-side lab to practice implementation.</p>
 
     <div class="links">
       <a href="https://github.com/bonguynvan/beacon-parser" target="_blank" rel="noopener">
-        <span class="label">GitHub</span>
-        beacon-parser
+        <svg class="link-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+        </svg>
+        <span class="link-text">
+          <span class="label">GitHub</span>
+          beacon-parser
+        </span>
+        <svg class="link-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6"/>
+        </svg>
       </a>
       <a href="https://lab.averosi.com" target="_blank" rel="noopener">
-        <span class="label">Lab</span>
-        Practice Adobe Analytics implementation, no Adobe account needed
+        <svg class="link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 3h6M10 3v5.2a2 2 0 0 1-.4 1.2L5 16.5A2 2 0 0 0 6.6 20h10.8a2 2 0 0 0 1.6-3.5l-4.6-7.1a2 2 0 0 1-.4-1.2V3"/>
+        </svg>
+        <span class="link-text">
+          <span class="label">Lab</span>
+          Practice Adobe Analytics, no Adobe account needed
+        </span>
+        <svg class="link-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6"/>
+        </svg>
       </a>
       <a href="https://www.npmjs.com/package/@bonv/beacon-parser" target="_blank" rel="noopener">
-        <span class="label">npm</span>
-        @bonv/beacon-parser
+        <svg class="link-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M1.763 0C.786 0 0 .786 0 1.763v20.474C0 23.214.786 24 1.763 24h20.474c.977 0 1.763-.786 1.763-1.763V1.763C24 .786 23.214 0 22.237 0zM5.13 5.323l13.837.019-.009 13.836h-3.464l.01-10.382h-3.456L12.04 19.17H5.113z"/>
+        </svg>
+        <span class="link-text">
+          <span class="label">npm</span>
+          @bonv/beacon-parser
+        </span>
+        <svg class="link-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6"/>
+        </svg>
       </a>
     </div>
 
