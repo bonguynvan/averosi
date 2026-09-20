@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bonv</title>
+<meta name="description" content="Bonv — Adobe Analytics tooling & tag QA." />
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0b0d10;
+    --bg-raised: #12151a;
+    --border: #22262d;
+    --text: #e6e8eb;
+    --text-dim: #8b93a1;
+    --accent: #7ee787;
+    --accent-dim: #3d6b42;
+    --mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    padding: 1.5rem;
+  }
+
+  .card {
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .mark {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    margin: 0 auto 1.25rem;
+    background: radial-gradient(circle at 35% 30%, #bff7c4, var(--accent) 60%, var(--accent-dim) 100%);
+    box-shadow: 0 0 28px 4px rgba(126, 231, 135, 0.35);
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.4rem;
+  }
+
+  p.tagline {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    margin: 0 0 1.75rem;
+  }
+
+  .links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .links a {
+    display: block;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: border-color 120ms ease, transform 80ms ease;
+  }
+
+  .links a:hover {
+    border-color: var(--accent-dim);
+  }
+
+  .links a:active {
+    transform: translateY(1px);
+  }
+
+  .links .label {
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+
+  footer {
+    margin-top: 2rem;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="mark" aria-hidden="true"></div>
+    <h1>Bonv</h1>
+    <p class="tagline">Adobe Analytics tooling &amp; tag QA</p>
+
+    <div class="links">
+      <a href="https://github.com/bonguynvan/beacon-parser" target="_blank" rel="noopener">
+        <span class="label">GitHub</span>
+        beacon-parser
+      </a>
+      <a href="https://lab.averosi.com" target="_blank" rel="noopener">
+        <span class="label">Lab</span>
+        Practice Adobe Analytics implementation, no Adobe account needed
+      </a>
+      <a href="https://www.npmjs.com/package/@bonv/beacon-parser" target="_blank" rel="noopener">
+        <span class="label">npm</span>
+        @bonv/beacon-parser
+      </a>
+    </div>
+
+    <footer>&copy; Bonv</footer>
+  </div>
+</body>
+</html>
