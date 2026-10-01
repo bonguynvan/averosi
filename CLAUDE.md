@@ -83,7 +83,7 @@ Gotchas:
 - New routes must be added to `ROUTES` in `apps/web/e2e/compliance.spec.ts`.
 - E2E runs with `DATA_MODE=fixture` (see `src/lib/risk/fixtures.ts`), so tests never hit live RPC or list hosts. Do a manual live check before shipping risk logic changes.
 - No root `loading.tsx`: wrap slow data in `<Suspense fallback={<PageSkeleton />}>` after any `notFound()` check, or 404s turn into 200s.
-- State changes that resize layout go through `runViewTransition(() => flushSync(...))`. Don't animate width or height.
+- Motion: GSAP via `@/lib/motion/gsap` with `useGSAP`/`contextSafe`, always reduced-motion aware. Lenis owns scrolling: add `data-lenis-prevent` to inner scroll areas. Mark below-fold blocks `data-reveal`. Details in docs/DESIGN.md "Motion & scrolling".
 - Canvas (tradecanvas) needs concrete colours: `PriceChart` reads `--ds-color-*` via `getComputedStyle`. Never hardcode hex there either.
 - Market e2e asserts the browser only requests our own origin. Keep exchange calls server-side.
 - All risk-center copy lives in `src/lib/risk/copy.ts`. Never say an address is "an toàn".

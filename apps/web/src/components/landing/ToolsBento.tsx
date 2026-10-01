@@ -56,7 +56,7 @@ const TOOLS: readonly Tool[] = [
 /** Bento grid of tools — asymmetric on purpose: the risk center is the primary action. */
 export function ToolsBento() {
   return (
-    <section aria-labelledby="tools-title" className="flex flex-col gap-4">
+    <section aria-labelledby="tools-title" data-reveal className="flex flex-col gap-4">
       <h2 id="tools-title" className="font-mono text-[22px] leading-7 font-bold text-text">
         Công cụ miễn phí
       </h2>

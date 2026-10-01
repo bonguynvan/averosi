@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { NAV_ITEMS } from "@/lib/nav";
-import { prefersReducedMotion } from "@/lib/viewTransition";
+import { prefersReducedMotion } from "@/lib/motion/gsap";
 import { NavLink } from "./NavLink";
 
 /** Mobile: one snapping row that scrolls inside itself (never the page) and keeps the active item in view. */

@@ -1,4 +1,5 @@
 import { BRAND } from "@/lib/brand";
+import { AnimatedDetails } from "../ui/AnimatedDetails";
 
 const FAQ: readonly { readonly q: string; readonly a: string }[] = [
   {
@@ -23,24 +24,31 @@ const FAQ: readonly { readonly q: string; readonly a: string }[] = [
   },
 ];
 
-/** Native <details>: accessible, works without JS; the chevron rotates via CSS only. */
+/** Native <details> (accessible, works without JS), height-animated with GSAP. */
 export function Faq() {
   return (
-    <section aria-labelledby="faq-title" className="flex flex-col gap-4">
+    <section aria-labelledby="faq-title" data-reveal className="flex flex-col gap-4">
       <h2 id="faq-title" className="font-mono text-[22px] leading-7 font-bold text-text">
         Câu hỏi thường gặp
       </h2>
       <div className="divide-y divide-outline-subtle border border-outline-subtle bg-surface-low">
         {FAQ.map((item, i) => (
-          <details key={item.q} open={i === 0} className="group">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 font-mono text-[14px] font-semibold text-text transition-colors duration-[var(--ds-duration-fast)] hover:text-accent [&::-webkit-details-marker]:hidden">
-              {item.q}
-              <span aria-hidden="true" className="text-accent transition-transform duration-[var(--ds-duration-normal)] group-open:rotate-45">
-                +
-              </span>
-            </summary>
-            <p className="animate-fade px-4 pb-4 text-[14px] leading-6 text-text-muted">{item.a}</p>
-          </details>
+          <AnimatedDetails
+            key={item.q}
+            defaultOpen={i === 0}
+            className="group"
+            summaryClassName="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 font-mono text-[14px] font-semibold text-text transition-colors duration-[var(--ds-duration-fast)] hover:text-accent [&::-webkit-details-marker]:hidden"
+            summary={
+              <>
+                {item.q}
+                <span aria-hidden="true" className="text-accent transition-transform duration-[var(--ds-duration-normal)] group-open:rotate-45">
+                  +
+                </span>
+              </>
+            }
+          >
+            <p className="px-4 pb-4 text-[14px] leading-6 text-text-muted">{item.a}</p>
+          </AnimatedDetails>
         ))}
       </div>
     </section>

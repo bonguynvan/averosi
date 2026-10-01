@@ -1,8 +1,8 @@
 "use client";
 
-import { type ReactNode, useId, useState } from "react";
+import { type ReactNode, useId, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { runViewTransition, viewTransitionName } from "@/lib/viewTransition";
+import { MOTION, gsap, prefersReducedMotion, useGSAP } from "@/lib/motion/gsap";
 
 interface CollapsiblePanelProps {
   readonly title: string;
@@ -11,18 +11,48 @@ interface CollapsiblePanelProps {
 }
 
 /**
- * Same look as Panel, but the header toggles the body. The height change is a view transition
- * (clip-reveal on the compositor), so neighbours glide instead of jumping. Never use for legal notices.
+ * Same look as Panel; the header toggles the body with a GSAP height tween (to/from `auto`)
+ * plus a content fade. Collapsed bodies are `hidden` (out of the a11y tree). Never use for legal notices.
  */
 export function CollapsiblePanel({ title, defaultOpen = true, children }: CollapsiblePanelProps) {
   const id = useId();
   const bodyId = `${id}-body`;
   const [open, setOpen] = useState(defaultOpen);
+  const root = useRef<HTMLElement>(null);
+  const body = useRef<HTMLDivElement>(null);
+  const { contextSafe } = useGSAP({ scope: root });
 
-  const toggle = () => runViewTransition(() => flushSync(() => setOpen((v) => !v)));
+  const toggle = contextSafe(() => {
+    const el = body.current;
+    if (!el || prefersReducedMotion()) {
+      setOpen((v) => !v);
+      return;
+    }
+    if (open) {
+      gsap.to(el, {
+        height: 0,
+        opacity: 0,
+        duration: MOTION.slow,
+        ease: MOTION.easeInOut,
+        overflow: "hidden",
+        overwrite: "auto",
+        onComplete: () => {
+          flushSync(() => setOpen(false));
+          gsap.set(el, { clearProps: "height,opacity,overflow" });
+        },
+      });
+    } else {
+      flushSync(() => setOpen(true));
+      gsap.fromTo(
+        el,
+        { height: 0, opacity: 0, overflow: "hidden" },
+        { height: "auto", opacity: 1, duration: MOTION.slow, ease: MOTION.easeInOut, overwrite: "auto", clearProps: "height,opacity,overflow" },
+      );
+    }
+  });
 
   return (
-    <section className="border border-outline-subtle bg-surface-low" style={{ viewTransitionName: viewTransitionName("panel", id) }}>
+    <section ref={root} className="border border-outline-subtle bg-surface-low">
       <h2>
         <button
           type="button"
@@ -42,8 +72,8 @@ export function CollapsiblePanel({ title, defaultOpen = true, children }: Collap
           </span>
         </button>
       </h2>
-      <div id={bodyId} hidden={!open} className="p-3">
-        {children}
+      <div ref={body} id={bodyId} hidden={!open}>
+        <div className="p-3">{children}</div>
       </div>
     </section>
   );

@@ -44,6 +44,10 @@ Mọi đóng góp phải tuân thủ các nguyên tắc R1–R10 trong [LEGAL_RE
 
 "Averosi" là tên tạm thời. Tên, domain, email liên hệ và link mã nguồn chỉ nằm trong `apps/web/src/lib/brand.ts` và có thể ghi đè bằng biến môi trường `NEXT_PUBLIC_*` (xem `.env.example`). Nội dung chính sách dùng placeholder `{{BRAND_NAME}}`.
 
+## Thư viện bên thứ ba
+
+GSAP (Standard "no charge" license), Lenis (MIT), @tradecanvas/chart (MIT), Next.js, viem, zod. Xem `package.json`.
+
 ## Giấy phép
 
 Mã nguồn: [Apache-2.0](LICENSE). Tên và logo "Averosi" không thuộc phạm vi giấy phép.

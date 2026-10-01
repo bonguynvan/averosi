@@ -57,7 +57,7 @@ export default async function LegalTrackerPage({ searchParams }: Props) {
 
         <ol className="flex flex-col gap-4" data-testid="legal-list">
           {items.map((i) => (
-            <li key={i.slug} className="animate-enter">
+            <li key={i.slug}>
               <InstrumentCard instrument={i} now={now} />
             </li>
           ))}

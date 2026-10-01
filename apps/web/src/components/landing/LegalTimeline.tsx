@@ -10,7 +10,7 @@ const vnDate = (iso: string) => iso.split("-").reverse().join("/");
 export function LegalTimeline({ instruments, now }: { instruments: readonly LegalInstrument[]; now: Date }) {
   const ordered = [...instruments].reverse();
   return (
-    <section aria-labelledby="legal-title" className="flex flex-col gap-4">
+    <section aria-labelledby="legal-title" data-reveal className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 id="legal-title" className="font-mono text-[22px] leading-7 font-bold text-text">
@@ -23,7 +23,7 @@ export function LegalTimeline({ instruments, now }: { instruments: readonly Lega
         </Link>
       </div>
 
-      <div className="scroll-fade-x overflow-x-auto pb-2">
+      <div className="scroll-fade-x overflow-x-auto pb-2" data-lenis-prevent-wheel>
         <ol className="flex w-max gap-0">
           {ordered.map((i) => (
             <li key={i.slug} className="relative w-64 snap-start pt-6 pr-4">

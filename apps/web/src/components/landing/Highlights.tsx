@@ -16,7 +16,7 @@ interface HighlightCard {
 /** Three factual highlight cards. Neutral framing: no "top gainers", no buy prompts. */
 export function Highlights({ cards }: { cards: readonly HighlightCard[] }) {
   return (
-    <section aria-label="Nổi bật 24 giờ" className="grid gap-4 md:grid-cols-3">
+    <section aria-label="Nổi bật 24 giờ" data-reveal className="grid gap-4 md:grid-cols-3">
       {cards.map((card) => (
         <article key={card.title} className="flex flex-col border border-outline-subtle bg-surface-low">
           <header className="border-b border-outline-subtle px-4 py-3">

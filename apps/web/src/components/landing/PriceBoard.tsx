@@ -2,7 +2,8 @@
 
 import type { Sparkline as SparklineData } from "@app/core";
 import Link from "next/link";
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
+import { MOTION, gsap, useGSAP } from "@/lib/motion/gsap";
 import { Change } from "../market/Change";
 import { Sparkline } from "./Sparkline";
 
@@ -24,6 +25,21 @@ export function PriceBoard({ tabs, updatedAt }: PriceBoardProps) {
   const id = useId();
   const [active, setActive] = useState(tabs[0]?.id ?? "");
   const current = tabs.find((t) => t.id === active) ?? tabs[0];
+  const list = useRef<HTMLUListElement>(null);
+  const firstRender = useRef(true);
+
+  useGSAP(
+    () => {
+      if (firstRender.current) {
+        firstRender.current = false;
+        return;
+      }
+      gsap.matchMedia().add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.from("li", { opacity: 0, x: 12, duration: MOTION.normal, ease: MOTION.ease, stagger: MOTION.stagger, clearProps: "opacity,transform" });
+      });
+    },
+    { scope: list, dependencies: [active] },
+  );
 
   return (
     <div className="border border-outline bg-surface-lowest" data-testid="price-board">
@@ -44,9 +60,9 @@ export function PriceBoard({ tabs, updatedAt }: PriceBoardProps) {
           </button>
         ))}
       </div>
-      <ul id={`${id}-panel`} role="tabpanel" aria-labelledby={`${id}-${active}`} className="divide-y divide-outline-subtle">
+      <ul ref={list} id={`${id}-panel`} role="tabpanel" aria-labelledby={`${id}-${active}`} className="divide-y divide-outline-subtle">
         {current?.rows.map((r) => (
-          <li key={r.symbol} className="animate-fade">
+          <li key={r.symbol}>
             <Link
               href={`/tai-san/${r.symbol.toLowerCase()}`}
               className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 transition-colors duration-[var(--ds-duration-fast)] hover:bg-surface sm:grid-cols-[minmax(0,1fr)_96px_auto]"

@@ -11,7 +11,7 @@ export function InstrumentCard({ instrument, now }: { instrument: LegalInstrumen
   const days = daysUntil(meta.effectiveAt, now);
 
   return (
-    <article className="flex flex-col gap-3 border border-outline-subtle bg-surface-low p-4 transition-colors duration-[var(--ds-duration-fast)] hover:border-outline" data-testid="legal-card">
+    <article data-reveal className="flex flex-col gap-3 border border-outline-subtle bg-surface-low p-4 transition-colors duration-[var(--ds-duration-fast)] hover:border-outline" data-testid="legal-card">
       <header className="flex flex-wrap items-center gap-2 font-mono text-[12px]">
         <StatusBadge status={status} />
         <span className="text-text-muted">{LEGAL_CATEGORIES[meta.category]}</span>

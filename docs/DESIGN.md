@@ -40,12 +40,25 @@ Every page shows the persistent legal bar (`--legal-bar-h`) linking to `/mien-tr
 
 ## Motion & scrolling
 
-- Animate only `transform` and `opacity`. Layout changes (sidebar collapse, panel toggle) use the **View Transitions API** via `runViewTransition()` (`apps/web/src/lib/viewTransition.ts`). Snapshots are clipped, not scaled (`object-fit: none`), so text never squashes. Browsers without the API change state instantly.
-- Durations: `--ds-duration-fast` 120ms (hover/colour), `--ds-duration-normal` 200ms (fades), `--ds-duration-slow` 280ms (enter, view transitions). Easing `--ds-ease-out`. All of them become 0 under `prefers-reduced-motion`, and view-transition animations are disabled there too.
-- Page content eases in via `app/template.tsx` (`animate-enter`). Data waits show `PageSkeleton` inside `<Suspense>` placed **after** `notFound()` checks. Never use a root `loading.tsx`, because it makes 404s return 200.
-- Sticky shell: the header, legal bar and mobile nav sit in `#shell-top`. `ShellMetrics` publishes its height as `--ds-shell-top`, which the sidebar, table headers and `scroll-padding-top` use.
-- Scrollers: thin token-coloured scrollbars; horizontal scrollers use `scroll-fade-x` (snap + edge mask) and scroll only themselves.
-- Collapsible panels (`CollapsiblePanel`) are for methodology and sources only. Legal notices are never collapsible.
+Libraries: **GSAP** (+ `@gsap/react` `useGSAP`, ScrollTrigger) for animation, and **Lenis** for smooth scrolling, sharing GSAP's ticker. Both are wired in `apps/web/src/lib/motion/gsap.ts` and `components/motion/*`.
+
+| Concern | How |
+|---|---|
+| Page scroll | Lenis (`SmoothScroll`, lerp 0.12). Inner scrollers opt out with `data-lenis-prevent` (sidebar) or `data-lenis-prevent-wheel` (horizontal timeline). No CSS `scroll-behavior`. |
+| First paint | CSS keyframe `animate-enter` (template). Never animate above-the-fold content from JS: it would flash after hydration. |
+| Scroll reveals | Add `data-reveal` to a block. `ScrollReveal` hides only blocks that start below the fold, then batches them in (opacity + y). |
+| Sidebar | GSAP width tween; labels (`data-nav-label`) fade out first and in last. The inner nav is always 256px and the column clips (`overflow-x: clip`, not `hidden`, so sticky still works), so icons never move. |
+| Panels / FAQ | `CollapsiblePanel`, `AnimatedDetails`: GSAP height tween to/from `auto` plus fade; `hidden`/`open` set at the right moment for assistive tech. |
+| Lists | Stagger on state change only (e.g. price-board tabs), never on first render. |
+
+Rules:
+- Every GSAP effect runs inside `gsap.matchMedia("(prefers-reduced-motion: no-preference)")` or checks `prefersReducedMotion()`. With reduced motion, state changes are instant and Lenis is off.
+- Use `useGSAP` / `contextSafe` (automatic cleanup), not raw `useEffect` tweens.
+- Tokens: JS durations live in `MOTION` and mirror the `--ds-duration-*` tokens.
+- Content must be fully visible without JS.
+- Collapsible panels are for methodology and sources only. Legal notices are never collapsible.
+- The sticky shell (`#shell-top`, `--ds-shell-top` from `ShellMetrics`) and thin token scrollbars are unchanged.
+- Never use a root `loading.tsx`: wrap slow data in `<Suspense>` after `notFound()` checks.
 
 ## Accessibility
 

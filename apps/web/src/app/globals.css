@@ -49,11 +49,7 @@
   scroll-padding-top: calc(var(--ds-shell-top) + var(--ds-space-2));
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  :root {
-    scroll-behavior: smooth;
-  }
-}
+/* Smooth scrolling is handled by Lenis (components/motion/SmoothScroll); no CSS scroll-behavior to avoid fighting it. */
 
 @layer base {
   html,
@@ -143,28 +139,7 @@
   animation: ds-pulse 1.4s ease-in-out infinite;
 }
 
-/* ── View transitions (sidebar collapse, panel toggle) ────────────── */
-::view-transition-group(*) {
-  animation-duration: var(--ds-duration-slow);
-  animation-timing-function: var(--ds-ease-out);
-}
-/* Clip instead of scaling snapshots, so text never squashes while a pane or panel resizes. */
-::view-transition-image-pair(*) {
-  overflow: clip;
-}
-::view-transition-old(*),
-::view-transition-new(*) {
-  height: 100%;
-  width: auto;
-  object-fit: none;
-  object-position: left top;
-}
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-group(*),
-  ::view-transition-old(*),
-  ::view-transition-new(*) {
-    animation: none !important;
-  }
   .animate-enter,
   .animate-fade,
   .skeleton {

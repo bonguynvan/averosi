@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { LegalBar } from "@/components/layout/LegalBar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { ShellMetrics } from "@/components/layout/ShellMetrics";
+import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { SideNav } from "@/components/layout/SideNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -14,7 +15,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BRAND.siteUrl),
-  title: { default: `${BRAND.name} — Dữ liệu Web3 cho người Việt`, template: `%s · ${BRAND.name}` },
+  title: { default: `${BRAND.name} — Dữ liệu Web3`, template: `%s · ${BRAND.name}` },
   description:
     "Công cụ mã nguồn mở, miễn phí, chỉ đọc: dữ liệu blockchain công khai, kiểm tra rủi ro ví, pháp lý tài sản mã hóa Việt Nam. Không phải sàn giao dịch.",
 };
@@ -40,9 +41,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <MobileNav />
         </div>
         <ShellMetrics targetId="shell-top" />
+        <SmoothScroll />
         <div className="flex flex-1">
           <SideNav initialCollapsed={collapsed} />
-          <main id="main" className="terminal-grid min-w-0 flex-1 px-4 py-6 [view-transition-name:workspace]">
+          <main id="main" className="terminal-grid min-w-0 flex-1 px-4 py-6">
             {children}
           </main>
         </div>
