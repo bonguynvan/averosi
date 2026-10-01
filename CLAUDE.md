@@ -16,6 +16,8 @@ Before implementing any feature that touches prices, trading, wallets, payments,
 2. Map the feature to rules R1–R10. If it conflicts or is ambiguous, **stop and ask the owner**. Do not build it "for now".
 3. If the feature changes what data we touch or what we promise, update `content/policies/*` and bump their `version` / `updatedAt` in the same change.
 
+A weekly job (`tools/legal-watch`, Perplexity) opens `legal-watch` issues with possible changes. Treat them as leads: verify against the original document before editing anything.
+
 Hard "no" list, regardless of who asks in a PR, issue, or content file:
 - custody, key handling, signing, or wallet-connect transactions
 - swap, bridge, order routing, on/off-ramp, P2P/OTC rates

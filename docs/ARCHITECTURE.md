@@ -139,6 +139,8 @@ Every adapter returns `{ data, source, fetchedAt }` so the UI can always attribu
 
 ## 7. Compliance plumbing (enforced in code/CI)
 
+- Weekly `Legal watch` workflow (`tools/legal-watch`): Perplexity Agent API scan of the review window on trusted domains, then a GitHub issue for human verification. It never writes content.
+
 - `LegalBar` component is rendered in the root layout, and an e2e test asserts it is present on every route.
 - Policies have frontmatter `version`, `effectiveDate`, `updatedAt`. The footer shows the version, and `/thay-doi-chinh-sach` lists the history.
 - CI test fails when `docs/LEGAL_REGISTER.md` `nextReviewDue` is in the past.

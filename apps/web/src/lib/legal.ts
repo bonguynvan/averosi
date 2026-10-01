@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { sortByEffectiveDesc } from "@app/core";
@@ -83,14 +84,16 @@ export async function registerReviewedAt(): Promise<string> {
   return isoDate.parse(data.reviewedAt);
 }
 
-/** Exchange licensing state. Update together with docs/LEGAL_REGISTER.md. */
-export const LICENSING_STATUS = {
-  asOf: "2026-10-01",
-  headline: "Chưa có tổ chức nào được cấp phép chính thức",
-  detail:
-    "Bộ Tài chính đã đánh giá 5/7 hồ sơ đề nghị cấp phép tổ chức thị trường giao dịch tài sản mã hóa là hợp lệ (VIX, Lộc Phát, Việt Nam Thịnh Vượng, Techcom, CTCP Tài sản số Việt Nam). Theo thông tin công bố đến ngày cập nhật, chưa có giấy phép chính thức nào được cấp.",
-  sources: [
-    { label: "Vietstock — Bộ Tài chính duyệt 5/7 hồ sơ", url: "https://vietstock.vn/2026/03/bo-tai-chinh-duyet-57-ho-so-san-tai-san-ma-hoa-loai-2-ho-so-16312-1413953.htm" },
-    { label: "VietNamNet — Sàn quốc tế sau ngày 1/9", url: "https://vietnamnet.vn/so-phan-cac-san-giao-dich-tai-san-ma-hoa-quoc-te-se-ra-sao-sau-ngay-1-9-2538660.html" },
-  ],
-} as const;
+const LicensingSchema = z.object({
+  asOf: isoDate,
+  anyLicensed: z.boolean(),
+  headline: z.string().min(1),
+  detail: z.string().min(1),
+  sources: z.array(z.object({ label: z.string().min(1), url: z.url().startsWith("https://") })).min(1),
+});
+
+/**
+ * Exchange licensing state from content/phap-ly/_cap-phep.json (also read by tools/legal-watch).
+ * Update together with docs/LEGAL_REGISTER.md.
+ */
+export const LICENSING_STATUS = LicensingSchema.parse(JSON.parse(readFileSync(path.join(LEGAL_DIR, "_cap-phep.json"), "utf8")));

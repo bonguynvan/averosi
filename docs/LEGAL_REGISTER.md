@@ -6,6 +6,8 @@ reviewer: owner (non-lawyer) — chưa được luật sư thẩm định
 
 # Legal Register — Averosi
 
+Automation: `tools/legal-watch` scans weekly (Perplexity Agent API) and opens a `legal-watch` issue with leads. Every lead must be verified against the original document before this register or `content/phap-ly` changes. The daily CI still fails when `nextReviewDue` has passed.
+
 Snapshot of Vietnamese law that constrains this product. **Update this file before building any feature that touches money, trading, user data, or advertising**, and at least every 30 days (`nextReviewDue`; CI fails when it is past). Not legal advice.
 
 ## Status of the owner

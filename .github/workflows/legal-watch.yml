@@ -1,0 +1,46 @@
+name: Legal watch
+
+# Weekly AI-assisted scan for new/changed Vietnamese crypto law (Perplexity Agent API).
+# Opens or comments on a "legal-watch" issue for human verification. It never edits legal content.
+on:
+  schedule:
+    - cron: "0 1 * * 1" # Mondays 01:00 UTC = 08:00 Vietnam time
+  workflow_dispatch:
+    inputs:
+      preset:
+        description: "Perplexity preset (fast | low | medium | high)"
+        default: "low"
+        required: false
+      dry_run:
+        description: "1 = print the report only, do not open an issue"
+        default: "0"
+        required: false
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: legal-watch
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @app/legal-watch test
+      - name: Scan
+        run: pnpm --filter @app/legal-watch start
+        env:
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+          PERPLEXITY_PRESET: ${{ inputs.preset }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
