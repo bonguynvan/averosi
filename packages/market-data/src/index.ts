@@ -3,3 +3,4 @@ export * from "./exchanges";
 export * from "./fx";
 export * from "./candles";
 export * from "./ttlCache";
+export * from "./realtime";

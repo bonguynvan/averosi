@@ -3,7 +3,9 @@
   "private": true,
   "license": "Apache-2.0",
   "packageManager": "pnpm@10.15.0",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "pnpm --filter @app/web dev",
     "build": "pnpm -r build",
@@ -12,7 +14,10 @@
     "test": "pnpm -r test",
     "test:coverage": "pnpm -r test:coverage",
     "test:e2e": "pnpm --filter @app/web test:e2e",
-    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "worker": "pnpm --filter @app/worker dev"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
