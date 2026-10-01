@@ -15,6 +15,7 @@ Averosi ([averosi.com](https://averosi.com)) là công cụ xem dữ liệu bloc
 | Chính sách (miễn trừ, điều khoản, quyền riêng tư) | ✅ bản nháp có phiên bản |
 | Tổng quan (`/`): landing page | ✅ |
 | Thị trường (`/thi-truong`, `/tai-san/[mã]`): giá tham khảo VNĐ, biểu đồ nến | ✅ hoạt động (14 tài sản, 4 nguồn USD pháp định) |
+| Biểu đồ (`/bieu-do`): biểu đồ kỹ thuật đầy đủ (tradecanvas), chỉ đọc | ✅ |
 | Pháp lý (`/phap-ly`): 7 văn bản, trạng thái hiệu lực, nguồn chính thức | ✅ |
 | Theo dõi ví, Kiến thức | 🚧 đang phát triển |
 

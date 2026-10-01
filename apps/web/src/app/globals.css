@@ -153,3 +153,35 @@
   scrollbar-width: none;
   mask-image: linear-gradient(to right, transparent, black var(--ds-space-4), black calc(100% - var(--ds-space-4)), transparent);
 }
+
+/* ── tradecanvas widget chrome → design tokens (higher specificity than the widget's .tcw-root) ── */
+.ds-chart .tcw-root:not([data-tcw-theme="light"]) {
+  background: var(--ds-color-canvas);
+  color: var(--ds-color-text);
+  font-family: var(--ds-font-prose);
+  --tcw-bg: var(--ds-color-canvas);
+  --tcw-bg-surface: var(--ds-color-surface-lowest);
+  --tcw-bg-elevated: var(--ds-color-surface);
+  --tcw-bg-overlay: rgb(8 8 8 / 0.85);
+  --tcw-border: var(--ds-color-outline-subtle);
+  --tcw-border-strong: var(--ds-color-outline);
+  --tcw-divider: var(--ds-color-outline-subtle);
+  --tcw-text: var(--ds-color-text);
+  --tcw-text-dim: var(--ds-color-text-muted);
+  --tcw-text-muted: var(--ds-color-text-faint);
+  --tcw-accent: var(--ds-color-accent);
+  --tcw-accent-hover: var(--ds-color-accent-soft);
+  --tcw-accent-soft: var(--ds-color-accent-tint);
+  --tcw-accent-glow: rgb(255 153 0 / 0.16);
+  --tcw-accent-line: rgb(255 153 0 / 0.45);
+  --tcw-active-bg: var(--ds-color-accent-tint);
+  --tcw-hover-bg: var(--ds-color-surface-high);
+  --tcw-green: var(--ds-color-up);
+  --tcw-red: var(--ds-color-down);
+  --tcw-amber: var(--ds-color-accent);
+  --tcw-font-mono: var(--ds-font-mono);
+  --tcw-radius-sm: 0;
+  --tcw-radius: 0;
+  --tcw-radius-lg: 0;
+  --tcw-radius-xl: 0;
+}

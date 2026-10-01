@@ -84,6 +84,7 @@ Gotchas:
 - E2E runs with `DATA_MODE=fixture` (see `src/lib/risk/fixtures.ts`), so tests never hit live RPC or list hosts. Do a manual live check before shipping risk logic changes.
 - No root `loading.tsx`: wrap slow data in `<Suspense fallback={<PageSkeleton />}>` after any `notFound()` check, or 404s turn into 200s.
 - Motion: GSAP via `@/lib/motion/gsap` with `useGSAP`/`contextSafe`, always reduced-motion aware. Lenis owns scrolling: add `data-lenis-prevent` to inner scroll areas. Mark below-fold blocks `data-reveal`. Details in docs/DESIGN.md "Motion & scrolling".
+- tradecanvas: never use its built-in exchange adapters (the browser would contact exchanges). Always use `PollingAdapter` → `/api/nen`. Keep `trading: false`. Library bugs and feature requests go to the `tradecanvas-upgrade` session, never a local patch.
 - Canvas (tradecanvas) needs concrete colours: `PriceChart` reads `--ds-color-*` via `getComputedStyle`. Never hardcode hex there either.
 - Market e2e asserts the browser only requests our own origin. Keep exchange calls server-side.
 - All risk-center copy lives in `src/lib/risk/copy.ts`. Never say an address is "an toàn".

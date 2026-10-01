@@ -1,6 +1,6 @@
 import { findAsset } from "@app/core";
 import { type NextRequest, NextResponse } from "next/server";
-import { parseTimeframe } from "@/lib/market/candles";
+import { candleTtlMs, parseTimeframe } from "@/lib/market/candles";
 import { candleRateLimiter, candles } from "@/lib/market/instance";
 import { clientKeyFromHeaders } from "@/lib/risk/form";
 
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest, { params }: Params) {
 
   try {
     const result = await candles(asset.symbol, timeframe);
-    return NextResponse.json(result, { headers: { "cache-control": "public, max-age=60" } });
+    return NextResponse.json(result, { headers: { "cache-control": `public, max-age=${Math.round(candleTtlMs(timeframe) / 1000)}` } });
   } catch {
     return NextResponse.json({ error: "UNAVAILABLE" }, { status: 503 });
   }

@@ -1,14 +1,13 @@
 import "server-only";
 import { MARKET_ASSETS, type MarketOverview, getMarketOverview } from "@app/core";
 import { createRateLimiter } from "../risk/rateLimit";
-import { type CandleResult, type Timeframe, createCandleSource } from "./candles";
+import { type CandleResult, type Timeframe, candleTtlMs, createCandleSource } from "./candles";
 import { createBitstampSource, createCoinbaseSource, createGeminiSource, createKrakenSource } from "./exchanges";
 import { FIXTURE_CANDLES, FIXTURE_FX, FIXTURE_MARKET_SOURCES } from "./fixtures";
 import { createVietcombankFx } from "./fx";
 import { createTtlCache } from "./ttlCache";
 
 const OVERVIEW_TTL_MS = 60_000;
-const CANDLES_TTL_MS = 5 * 60_000;
 const FX_TTL_MS = 30 * 60_000;
 
 const isFixture = process.env.DATA_MODE === "fixture";
@@ -30,7 +29,14 @@ const deps = isFixture
 const candleSource = isFixture ? FIXTURE_CANDLES : createCandleSource();
 
 const overviewCache = createTtlCache({ ttlMs: OVERVIEW_TTL_MS });
-const candleCache = createTtlCache({ ttlMs: CANDLES_TTL_MS });
+const candleCaches = new Map<Timeframe, ReturnType<typeof createTtlCache>>();
+const candleCacheFor = (tf: Timeframe) => {
+  const existing = candleCaches.get(tf);
+  if (existing) return existing;
+  const cache = createTtlCache({ ttlMs: candleTtlMs(tf) });
+  candleCaches.set(tf, cache);
+  return cache;
+};
 const SYMBOLS = MARKET_ASSETS.map((a) => a.symbol);
 
 export function marketOverview(): Promise<MarketOverview> {
@@ -38,7 +44,7 @@ export function marketOverview(): Promise<MarketOverview> {
 }
 
 export function candles(symbol: string, timeframe: Timeframe): Promise<CandleResult> {
-  return candleCache.get(`${symbol}:${timeframe}`, () => candleSource.candles(symbol, timeframe));
+  return candleCacheFor(timeframe).get(symbol, () => candleSource.candles(symbol, timeframe));
 }
 
 const SPARKLINE_POINTS = 24;
@@ -54,5 +60,5 @@ export async function sparklineSeries(symbols: readonly string[]): Promise<Reado
   );
 }
 
-/** 30 chart loads per minute per client. */
-export const candleRateLimiter = createRateLimiter({ limit: 30, windowMs: 60_000 });
+/** 90 candle requests per minute per client: room for the full chart page polling plus its watchlist. */
+export const candleRateLimiter = createRateLimiter({ limit: 90, windowMs: 60_000 });

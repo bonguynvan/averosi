@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { buildTerminalTheme } from "@/lib/chart/theme";
 import type { Bar, Timeframe } from "@/lib/market/candles";
 
 const TIMEFRAMES: readonly { readonly value: Timeframe; readonly label: string }[] = [
@@ -9,33 +11,6 @@ const TIMEFRAMES: readonly { readonly value: Timeframe; readonly label: string }
 ];
 
 type LoadState = { status: "loading" } | { status: "error" } | { status: "ready"; source: string; bars: readonly Bar[] };
-
-/** Canvas needs concrete colours: read them from design tokens so tokens.css stays the single source. */
-function tokenColor(name: string): string {
-  return getComputedStyle(document.documentElement).getPropertyValue(`--ds-color-${name}`).trim();
-}
-
-async function buildTheme() {
-  const { DARK_TERMINAL } = await import("@tradecanvas/chart");
-  return {
-    ...DARK_TERMINAL,
-    name: "ds-terminal",
-    background: tokenColor("canvas"),
-    text: tokenColor("text"),
-    textSecondary: tokenColor("text-muted"),
-    grid: tokenColor("surface-low"),
-    crosshair: tokenColor("accent"),
-    candleUp: tokenColor("up"),
-    candleDown: tokenColor("down"),
-    candleUpWick: tokenColor("up"),
-    candleDownWick: tokenColor("down"),
-    volumeUp: `${tokenColor("up")}55`,
-    volumeDown: `${tokenColor("down")}55`,
-    axisLine: tokenColor("outline-subtle"),
-    axisLabel: tokenColor("text-muted"),
-    axisLabelBackground: tokenColor("surface"),
-  };
-}
 
 export function PriceChart({ symbol }: { symbol: string }) {
   const container = useRef<HTMLDivElement>(null);
@@ -65,7 +40,7 @@ export function PriceChart({ symbol }: { symbol: string }) {
     const observer = new ResizeObserver(() => chart?.resize());
 
     (async () => {
-      const [{ Chart }, theme] = await Promise.all([import("@tradecanvas/chart"), buildTheme()]);
+      const [{ Chart }, theme] = await Promise.all([import("@tradecanvas/chart"), buildTerminalTheme()]);
       if (disposed) return;
       chart = new Chart(el, {
         chartType: "candlestick",
@@ -104,11 +79,14 @@ export function PriceChart({ symbol }: { symbol: string }) {
             </button>
           ))}
         </div>
-        <span className="font-mono text-[11px] text-text-muted" data-testid="chart-source">
-          {state.status === "ready" ? `Nến ${symbol}/USD · nguồn ${state.source}` : " "}
+        <span className="flex items-center gap-4 font-mono text-[11px] text-text-muted">
+          <span data-testid="chart-source">{state.status === "ready" ? `Nến ${symbol}/USD · nguồn ${state.source}` : " "}</span>
+          <Link href={`/bieu-do?ma=${symbol}`} className="label-caps text-accent hover:underline">
+            Mở biểu đồ đầy đủ →
+          </Link>
         </span>
       </div>
-      <div className="relative h-[420px] border border-outline-subtle bg-canvas">
+      <div className="relative h-[420px] border border-outline-subtle bg-canvas" data-lenis-prevent>
         <div
           ref={container}
           className={`h-full w-full transition-opacity duration-[var(--ds-duration-slow)] ${state.status === "ready" ? "opacity-100" : "opacity-0"}`}

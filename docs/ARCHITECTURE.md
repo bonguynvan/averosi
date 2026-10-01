@@ -9,6 +9,7 @@
 | Module | Route | What it does | Data |
 |---|---|---|---|
 | Tổng quan ✅ | `/` | Landing (Binance/CMC-style, Vietnamese framing): hero with VND price board + sparklines, headline stats, neutral highlights (volume, absolute move, source deviation, never "top gainers"), tools bento, legal timeline, FAQ. | Market service + `content/phap-ly` |
+| Biểu đồ ✅ | `/bieu-do?ma=` | Full-bleed tradecanvas `ChartWidget`: toolbar, indicators, drawings, chart types, settings, watchlist (fed from `/api/thi-truong`), alerts, replay, share-URL, layouts in localStorage. Read-only (`trading: false`, no depth ladder). Data via a `PollingAdapter` → `/api/nen` (1m/5m/15m/1h/1d, per-timeframe cache). Chrome themed via `--tcw-*` → tokens. | Exchange candles through our proxy |
 | Thị trường ✅ | `/thi-truong`, `/tai-san/[symbol]` | Median reference price of 14 assets from 4 exchanges' USD fiat pairs (Coinbase, Kraken, Bitstamp, Gemini), VND at Vietcombank's USD transfer rate, 24h change, aggregated volume, source health. Detail page: `@tradecanvas/chart` candles via the same-origin proxy `/api/nen/[symbol]`. | Exchange public APIs + Vietcombank feed |
 | Trung tâm rủi ro | `/rui-ro` | Paste an address or contract and get a risk report: sanctions list hit, known-scam lists, token approvals, contract flags (honeypot/proxy/owner mint). Shows the methodology. | Public RPC, OFAC SDN, open scam lists |
 | Theo dõi ví công khai | `/vi` | Watch public addresses: balances and recent transfers. Watchlist stored in `localStorage` only. | Public RPC / indexer |

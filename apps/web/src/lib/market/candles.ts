@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { fetchJson } from "./http";
 
-export type Timeframe = "1h" | "1d";
+/** Timeframes both Coinbase (granularity) and Kraken (interval) serve natively. */
+export const CANDLE_TIMEFRAMES = ["1m", "5m", "15m", "1h", "1d"] as const;
+export type Timeframe = (typeof CANDLE_TIMEFRAMES)[number];
 
 export interface Bar {
   readonly time: number;
@@ -21,10 +23,18 @@ export interface CandleSource {
   candles(symbol: string, timeframe: Timeframe): Promise<CandleResult>;
 }
 
-const TIMEFRAMES: Record<Timeframe, { readonly coinbaseGranularity: number; readonly krakenInterval: number }> = {
-  "1h": { coinbaseGranularity: 3_600, krakenInterval: 60 },
-  "1d": { coinbaseGranularity: 86_400, krakenInterval: 1_440 },
+const TIMEFRAMES: Record<Timeframe, { readonly coinbaseGranularity: number; readonly krakenInterval: number; readonly ttlMs: number }> = {
+  "1m": { coinbaseGranularity: 60, krakenInterval: 1, ttlMs: 10_000 },
+  "5m": { coinbaseGranularity: 300, krakenInterval: 5, ttlMs: 20_000 },
+  "15m": { coinbaseGranularity: 900, krakenInterval: 15, ttlMs: 30_000 },
+  "1h": { coinbaseGranularity: 3_600, krakenInterval: 60, ttlMs: 60_000 },
+  "1d": { coinbaseGranularity: 86_400, krakenInterval: 1_440, ttlMs: 300_000 },
 };
+
+/** Server cache lifetime per timeframe: short for intraday so chart polling stays near real time. */
+export function candleTtlMs(timeframe: Timeframe): number {
+  return TIMEFRAMES[timeframe].ttlMs;
+}
 
 export function parseTimeframe(input: string): Timeframe | null {
   return input in TIMEFRAMES ? (input as Timeframe) : null;

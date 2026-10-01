@@ -45,7 +45,7 @@ test("asset detail renders a read-only candle chart from the same-origin proxy",
 
 test("unknown asset is a 404 and candle API validates input", async ({ page, request }) => {
   expect((await page.goto("/tai-san/khong-co"))?.status()).toBe(404);
-  expect((await request.get("/api/nen/BTC?tf=5m")).status()).toBe(400);
+  expect((await request.get("/api/nen/BTC?tf=4h")).status()).toBe(400);
   expect((await request.get("/api/nen/XYZ")).status()).toBe(400);
   const ok = await request.get("/api/nen/eth?tf=1h");
   expect(ok.status()).toBe(200);

@@ -1,13 +1,19 @@
 import { describe, expect, test, vi } from "vitest";
-import { createCandleSource, parseTimeframe } from "@/lib/market/candles";
+import { CANDLE_TIMEFRAMES, candleTtlMs, createCandleSource, parseTimeframe } from "@/lib/market/candles";
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
 
 describe("parseTimeframe", () => {
-  test("accepts 1h and 1d only", () => {
-    expect(parseTimeframe("1h")).toBe("1h");
-    expect(parseTimeframe("1d")).toBe("1d");
-    expect(parseTimeframe("5m")).toBeNull();
+  test("accepts timeframes both Coinbase and Kraken can serve", () => {
+    for (const tf of ["1m", "5m", "15m", "1h", "1d"]) expect(parseTimeframe(tf)).toBe(tf);
+    expect(parseTimeframe("4h")).toBeNull(); // Coinbase has no 4h
+    expect(parseTimeframe("6h")).toBeNull(); // Kraken has no 6h
+    expect(parseTimeframe("1w")).toBeNull();
+  });
+
+  test("cache TTL shrinks with the timeframe so polling stays fresh", () => {
+    expect(candleTtlMs("1m")).toBeLessThan(candleTtlMs("1h"));
+    expect(candleTtlMs("1h")).toBeLessThan(candleTtlMs("1d"));
   });
 });
 
@@ -43,5 +49,21 @@ describe("createCandleSource", () => {
 
   test("throws when both sources fail", async () => {
     await expect(createCandleSource({ fetchFn: async () => json({}, 500) }).candles("BTC", "1h")).rejects.toThrow();
+  });
+});
+
+describe("timeframe mapping", () => {
+  test("maps to Coinbase granularity and Kraken interval", async () => {
+    const urls: string[] = [];
+    const fetchFn = async (url: string | URL | Request) => {
+      urls.push(String(url));
+      return json({}, 500);
+    };
+    await createCandleSource({ fetchFn }).candles("ETH", "15m").catch(() => undefined);
+    expect(urls).toEqual([
+      "https://api.exchange.coinbase.com/products/ETH-USD/candles?granularity=900",
+      "https://api.kraken.com/0/public/OHLC?pair=ETHUSD&interval=15",
+    ]);
+    expect(CANDLE_TIMEFRAMES).toEqual(["1m", "5m", "15m", "1h", "1d"]);
   });
 });
