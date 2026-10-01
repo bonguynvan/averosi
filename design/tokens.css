@@ -79,12 +79,15 @@
   --ds-ticker-h: 32px;
   --ds-sidebar-w: 256px;
   --ds-grid-cell: 24px;
+  --ds-scrollbar-size: 6px;
 
   /* ── Shape & motion ──────────────────────────────────────────── */
   --ds-radius: 0;                            /* sharp everywhere */
   --ds-radius-led: 9999px;                   /* LEDs & toggles only */
   --ds-duration-fast: 120ms;
   --ds-duration-normal: 200ms;
+  --ds-duration-slow: 280ms;
+  --ds-enter-offset: 4px;                 /* page/content enter slide distance */
   --ds-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ds-led-glow-up: 0 0 0 3px rgb(2 230 0 / 0.4);
   --ds-focus-ring: 0 0 0 1px var(--ds-color-accent);
@@ -94,5 +97,7 @@
   :root {
     --ds-duration-fast: 0ms;
     --ds-duration-normal: 0ms;
+    --ds-duration-slow: 0ms;
+    --ds-enter-offset: 0px;
   }
 }

@@ -64,7 +64,7 @@ export function RiskChecker() {
 
       <div aria-live="polite" aria-busy={isPending}>
         {state.status === "error" && (
-          <p role="alert" className="border-l-2 border-danger bg-danger-container px-3 py-2 text-[13px] text-text">
+          <p role="alert" className="animate-enter border-l-2 border-danger bg-danger-container px-3 py-2 text-[13px] text-text">
             {ERROR_COPY[state.error]}
           </p>
         )}

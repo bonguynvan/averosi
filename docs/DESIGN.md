@@ -38,6 +38,15 @@ Stitch mock copy contains claims we must **not** ship:
 
 Every page shows the persistent legal bar (`--legal-bar-h`) linking to `/mien-tru-trach-nhiem`. Prices always carry "Giá tham khảo · nguồn · thời điểm".
 
+## Motion & scrolling
+
+- Animate only `transform` and `opacity`. Layout changes (sidebar collapse, panel toggle) use the **View Transitions API** via `runViewTransition()` (`apps/web/src/lib/viewTransition.ts`). Snapshots are clipped, not scaled (`object-fit: none`), so text never squashes. Browsers without the API change state instantly.
+- Durations: `--ds-duration-fast` 120ms (hover/colour), `--ds-duration-normal` 200ms (fades), `--ds-duration-slow` 280ms (enter, view transitions). Easing `--ds-ease-out`. All of them become 0 under `prefers-reduced-motion`, and view-transition animations are disabled there too.
+- Page content eases in via `app/template.tsx` (`animate-enter`). Data waits show `PageSkeleton` inside `<Suspense>` placed **after** `notFound()` checks. Never use a root `loading.tsx`, because it makes 404s return 200.
+- Sticky shell: the header, legal bar and mobile nav sit in `#shell-top`. `ShellMetrics` publishes its height as `--ds-shell-top`, which the sidebar, table headers and `scroll-padding-top` use.
+- Scrollers: thin token-coloured scrollbars; horizontal scrollers use `scroll-fade-x` (snap + edge mask) and scroll only themselves.
+- Collapsible panels (`CollapsiblePanel`) are for methodology and sources only. Legal notices are never collapsible.
+
 ## Accessibility
 
 - `--color-text-faint` (#737373) is ~4.4:1 on black — metadata only, never body text.

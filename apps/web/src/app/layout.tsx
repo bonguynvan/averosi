@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { LegalBar } from "@/components/layout/LegalBar";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { ShellMetrics } from "@/components/layout/ShellMetrics";
 import { SideNav } from "@/components/layout/SideNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -26,15 +27,22 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang="vi" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body className="flex min-h-dvh flex-col">
-        <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:bg-accent focus:px-3 focus:py-2 focus:text-text-on-accent">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-accent focus:px-3 focus:py-2 focus:text-text-on-accent"
+        >
           Bỏ qua điều hướng
         </a>
-        <SiteHeader />
-        <LegalBar />
-        <MobileNav />
+        {/* Sticky so the legal bar stays visible while scrolling (CLAUDE.md §2). */}
+        <div id="shell-top" className="sticky top-0 z-30">
+          <SiteHeader />
+          <LegalBar />
+          <MobileNav />
+        </div>
+        <ShellMetrics targetId="shell-top" />
         <div className="flex flex-1">
           <SideNav initialCollapsed={collapsed} />
-          <main id="main" className="terminal-grid min-w-0 flex-1 px-4 py-6">
+          <main id="main" className="terminal-grid min-w-0 flex-1 px-4 py-6 [view-transition-name:workspace]">
             {children}
           </main>
         </div>

@@ -1,11 +1,13 @@
-import { findAsset, formatUsdMicros, formatVnd, formatVndCompact } from "@app/core";
+import { type AssetInfo, findAsset, formatUsdMicros, formatVnd, formatVndCompact } from "@app/core";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { Change } from "@/components/market/Change";
 import { MarketNotice } from "@/components/market/MarketNotice";
 import { PriceChart } from "@/components/market/PriceChart";
 import { SourceStatusList } from "@/components/market/SourceStatusList";
+import { PageSkeleton } from "@/components/ui/PageSkeleton";
 import { Panel } from "@/components/ui/Panel";
 import { marketOverview } from "@/lib/market/instance";
 
@@ -17,8 +19,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function AssetPage({ params }: Props) {
+  // Validate before any streaming starts so unknown symbols return a real 404.
   const asset = findAsset((await params).symbol);
   if (!asset) notFound();
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <AssetContent asset={asset} />
+    </Suspense>
+  );
+}
+
+async function AssetContent({ asset }: { asset: AssetInfo }) {
   const overview = await marketOverview();
   const snapshot = overview.assets.find((a) => a.symbol === asset.symbol);
 

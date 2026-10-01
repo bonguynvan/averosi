@@ -19,7 +19,7 @@ export function RiskReport({ report }: { report: SerializedRiskReport }) {
   const chain = chainInfo(report.chain);
 
   return (
-    <article aria-labelledby="risk-level" className="flex flex-col gap-3" data-testid="risk-report" data-level={report.level}>
+    <article aria-labelledby="risk-level" className="animate-enter flex flex-col gap-3" data-testid="risk-report" data-level={report.level}>
       <div className={`border-l-2 bg-surface px-3 py-3 ${TONE_CLASSES[level.tone]}`}>
         <h2 id="risk-level" className="label-caps">
           {level.label}

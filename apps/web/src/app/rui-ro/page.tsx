@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { RiskChecker } from "@/components/risk/RiskChecker";
+import { CollapsiblePanel } from "@/components/ui/CollapsiblePanel";
 import { Panel } from "@/components/ui/Panel";
 import { RISK_LISTS } from "@/lib/risk/instance";
 
@@ -28,7 +29,7 @@ export default function RiskCenterPage() {
       </div>
 
       <aside className="flex flex-col gap-4" aria-label="Phương pháp">
-        <Panel title="Phương pháp">
+        <CollapsiblePanel title="Phương pháp">
           <ul className="flex flex-col gap-3 text-[13px] leading-5">
             {CHECKS.map((c) => (
               <li key={c.name}>
@@ -41,7 +42,7 @@ export default function RiskCenterPage() {
           <p className="mt-3 border-t border-outline-subtle pt-3 text-[12px] leading-5 text-text-muted">
             Nếu một nguồn danh sách không phản hồi, kết quả là “Chưa đủ dữ liệu”, không bao giờ mặc định là không có rủi ro.
           </p>
-        </Panel>
+        </CollapsiblePanel>
 
         <Panel title="Giới hạn">
           <ul className="list-inside list-disc space-y-1 text-[12px] leading-5 text-text-muted">
@@ -51,7 +52,7 @@ export default function RiskCenterPage() {
           </ul>
         </Panel>
 
-        <Panel title="Nguồn mở">
+        <CollapsiblePanel title="Nguồn mở">
           <ul className="space-y-1 font-mono text-[12px]">
             {Object.values(RISK_LISTS).map((list) => (
               <li key={list.name}>
@@ -61,7 +62,7 @@ export default function RiskCenterPage() {
               </li>
             ))}
           </ul>
-        </Panel>
+        </CollapsiblePanel>
       </aside>
     </div>
   );

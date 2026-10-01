@@ -1,12 +1,13 @@
+import { Suspense } from "react";
 import { MarketNotice } from "@/components/market/MarketNotice";
 import { MarketTable } from "@/components/market/MarketTable";
 import { SourceStatusList } from "@/components/market/SourceStatusList";
+import { PageSkeleton } from "@/components/ui/PageSkeleton";
 import { Panel } from "@/components/ui/Panel";
 import { marketOverview } from "@/lib/market/instance";
 
-export default async function MarketsPage() {
+async function MarketContent() {
   const overview = await marketOverview();
-
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="flex min-w-0 flex-col gap-4">
@@ -28,5 +29,13 @@ export default async function MarketsPage() {
         <MarketNotice />
       </aside>
     </div>
+  );
+}
+
+export default function MarketsPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <MarketContent />
+    </Suspense>
   );
 }

@@ -44,6 +44,15 @@
   --ds-font-mono: var(--font-jetbrains), ui-monospace, monospace;
   --ds-font-prose: var(--font-inter), system-ui, sans-serif;
   color-scheme: dark;
+  /* Height of the sticky header block; kept in sync by components/layout/ShellMetrics. */
+  --ds-shell-top: 0px;
+  scroll-padding-top: calc(var(--ds-shell-top) + var(--ds-space-2));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root {
+    scroll-behavior: smooth;
+  }
 }
 
 @layer base {
@@ -80,4 +89,92 @@
     linear-gradient(var(--ds-color-surface-low) 1px, transparent 1px),
     linear-gradient(90deg, var(--ds-color-surface-low) 1px, transparent 1px);
   background-size: var(--ds-grid-cell) var(--ds-grid-cell);
+}
+
+/* ── Scrollbars: thin, token-coloured, square ───────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ds-color-outline) transparent;
+}
+::-webkit-scrollbar {
+  width: var(--ds-scrollbar-size);
+  height: var(--ds-scrollbar-size);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ds-color-outline);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ds-color-accent);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ── Enter animation (transform + opacity only) ───────────────────── */
+@keyframes ds-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--ds-enter-offset));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes ds-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes ds-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@utility animate-enter {
+  animation: ds-enter var(--ds-duration-slow) var(--ds-ease-out) both;
+}
+@utility animate-fade {
+  animation: ds-fade var(--ds-duration-normal) var(--ds-ease-out) both;
+}
+@utility skeleton {
+  background: var(--ds-color-surface);
+  animation: ds-pulse 1.4s ease-in-out infinite;
+}
+
+/* ── View transitions (sidebar collapse, panel toggle) ────────────── */
+::view-transition-group(*) {
+  animation-duration: var(--ds-duration-slow);
+  animation-timing-function: var(--ds-ease-out);
+}
+/* Clip instead of scaling snapshots, so text never squashes while a pane or panel resizes. */
+::view-transition-image-pair(*) {
+  overflow: clip;
+}
+::view-transition-old(*),
+::view-transition-new(*) {
+  height: 100%;
+  width: auto;
+  object-fit: none;
+  object-position: left top;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+  .animate-enter,
+  .animate-fade,
+  .skeleton {
+    animation: none;
+  }
+}
+
+/* ── Horizontal scrollers: snap + edge fade ────────────────────────── */
+@utility scroll-fade-x {
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  mask-image: linear-gradient(to right, transparent, black var(--ds-space-4), black calc(100% - var(--ds-space-4)), transparent);
 }

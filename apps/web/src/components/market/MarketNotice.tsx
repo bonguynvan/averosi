@@ -1,11 +1,12 @@
 import { MARKET_SOURCE_NOTES } from "@/lib/market/instance";
+import { CollapsiblePanel } from "../ui/CollapsiblePanel";
 import { Panel } from "../ui/Panel";
 
 /** Methodology + legal notice for every market view (LEGAL_REGISTER R3, R4, R8). */
 export function MarketNotice() {
   return (
     <>
-      <Panel title="Cách tính">
+      <CollapsiblePanel title="Cách tính">
         <ul className="space-y-2 text-[13px] leading-5 text-text-muted">
           <li>Giá = trung vị giá khớp gần nhất của các cặp USD pháp định trên các sàn bên dưới. Không dùng giá stablecoin (USDT).</li>
           <li>Quy đổi VNĐ theo tỷ giá USD chuyển khoản do Vietcombank công bố.</li>
@@ -20,7 +21,7 @@ export function MarketNotice() {
             </li>
           ))}
         </ul>
-      </Panel>
+      </CollapsiblePanel>
       <Panel title="Lưu ý pháp lý">
         <ul className="list-inside list-disc space-y-1 text-[12px] leading-5 text-text-muted">
           <li>Giá tham khảo, không phải báo giá giao dịch, có thể chậm hoặc sai.</li>

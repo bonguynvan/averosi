@@ -109,9 +109,12 @@ export function PriceChart({ symbol }: { symbol: string }) {
         </span>
       </div>
       <div className="relative h-[420px] border border-outline-subtle bg-canvas">
-        <div ref={container} className="h-full w-full" data-testid="price-chart" aria-label={`Biểu đồ nến ${symbol}/USD`} role="img" />
+        <div
+          ref={container}
+          className={`h-full w-full transition-opacity duration-[var(--ds-duration-slow)] ${state.status === "ready" ? "opacity-100" : "opacity-0"}`}
+          data-testid="price-chart" aria-label={`Biểu đồ nến ${symbol}/USD`} role="img" />
         {state.status !== "ready" && (
-          <p role="status" className="absolute inset-0 flex items-center justify-center font-mono text-[12px] text-text-muted">
+          <p role="status" className="animate-fade absolute inset-0 flex items-center justify-center font-mono text-[12px] text-text-muted">
             {state.status === "loading" ? "Đang tải dữ liệu…" : "Không tải được dữ liệu biểu đồ. Không có số liệu thay thế."}
           </p>
         )}
