@@ -1,12 +1,17 @@
 import type { IndicatorSnapshot, MarketOverview } from "@app/core";
+import { Redis } from "ioredis";
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "vitest";
 import { createMarketCache, type LivePrice, type MarketCache } from "../src/cache";
 import { createCandleRepo } from "../src/candleRepo";
 import { type Sql, createSql, migrate } from "../src/db";
 import { createQuoteRepo } from "../src/quoteRepo";
 
-const DB_URL = process.env.TEST_DATABASE_URL;
-const REDIS_URL = process.env.TEST_REDIS_URL;
+/**
+ * Destructive tests (TRUNCATE / FLUSHDB) only ever run against dedicated test stores:
+ * the database name must contain "test" and Redis must use logical DB 15.
+ */
+const DB_URL = process.env.TEST_DATABASE_URL && /\/[^/?]*test[^/?]*(\?|$)/.test(process.env.TEST_DATABASE_URL) ? process.env.TEST_DATABASE_URL : undefined;
+const REDIS_URL = process.env.TEST_REDIS_URL && /\/15$/.test(process.env.TEST_REDIS_URL) ? process.env.TEST_REDIS_URL : undefined;
 
 const bar = (time: number, close: number) => ({ time, open: close, high: close + 1, low: close - 1, close, volume: 10 });
 
@@ -82,7 +87,10 @@ describe.skipIf(!DB_URL)("postgres repositories", () => {
 describe.skipIf(!REDIS_URL)("redis cache", () => {
   let cache: MarketCache;
 
-  beforeAll(() => {
+  beforeAll(async () => {
+    const admin = new Redis(REDIS_URL as string);
+    await admin.flushdb();
+    admin.disconnect();
     cache = createMarketCache(REDIS_URL as string);
   });
   afterAll(async () => {

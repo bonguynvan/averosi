@@ -85,7 +85,7 @@ Gotchas:
 - New routes must be added to `ROUTES` in `apps/web/e2e/compliance.spec.ts`.
 - E2E runs with `DATA_MODE=fixture` (see `src/lib/risk/fixtures.ts`), so tests never hit live RPC or list hosts. Do a manual live check before shipping risk logic changes.
 - Market data flows exchange → worker → Postgres/Redis → web. Don't add exchange calls to web code paths that run in `store` mode, and never from the browser. New analytics go in `@app/core` (pure, tested) and run in the worker.
-- Local full stack: `pnpm infra:up`, then `pnpm worker`, then `MARKET_BACKEND=store pnpm dev`. Store integration tests need `TEST_DATABASE_URL`/`TEST_REDIS_URL` (CI provides them).
+- Local full stack: `pnpm infra:up`, then `pnpm worker`, then `MARKET_BACKEND=store pnpm dev`. Store integration tests need `TEST_DATABASE_URL=postgres://app:app@localhost:55432/market_test` and `TEST_REDIS_URL=redis://localhost:56379/15`. They refuse other targets, so dev data is never truncated. Before pushing, run `pnpm test:coverage` with these set: CI enforces coverage thresholds and `pnpm check` does not.
 - No root `loading.tsx`: wrap slow data in `<Suspense fallback={<PageSkeleton />}>` after any `notFound()` check, or 404s turn into 200s.
 - Motion: GSAP via `@/lib/motion/gsap` with `useGSAP`/`contextSafe`, always reduced-motion aware. Lenis owns scrolling: add `data-lenis-prevent` to inner scroll areas. Mark below-fold blocks `data-reveal`. Details in docs/DESIGN.md "Motion & scrolling".
 - tradecanvas: never use its built-in exchange adapters (the browser would contact exchanges). Always use `PollingAdapter` → `/api/nen`. Keep `trading: false`. Library bugs and feature requests go to the `tradecanvas-upgrade` session, never a local patch.

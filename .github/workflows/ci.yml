@@ -21,16 +21,16 @@ jobs:
         env:
           POSTGRES_USER: app
           POSTGRES_PASSWORD: app
-          POSTGRES_DB: market
+          POSTGRES_DB: market_test
         ports: ["5432:5432"]
-        options: --health-cmd "pg_isready -U app -d market" --health-interval 5s --health-retries 10
+        options: --health-cmd "pg_isready -U app -d market_test" --health-interval 5s --health-retries 10
       redis:
         image: redis:7-alpine
         ports: ["6379:6379"]
         options: --health-cmd "redis-cli ping" --health-interval 5s --health-retries 10
     env:
-      TEST_DATABASE_URL: postgres://app:app@localhost:5432/market
-      TEST_REDIS_URL: redis://localhost:6379
+      TEST_DATABASE_URL: postgres://app:app@localhost:5432/market_test
+      TEST_REDIS_URL: redis://localhost:6379/15
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

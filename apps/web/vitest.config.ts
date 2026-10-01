@@ -11,7 +11,8 @@ export default defineConfig({
       provider: "v8",
       include: ["src/lib/**/*.ts"],
       // Composition root and e2e fixtures are exercised by Playwright, not unit tests.
-      exclude: ["src/lib/**/instance.ts", "src/lib/**/fixtures.ts"],
+      // Composition roots, e2e fixtures and browser-only modules (DOM/GSAP) are covered by Playwright.
+      exclude: ["src/lib/**/instance.ts", "src/lib/**/fixtures.ts", "src/lib/motion/**", "src/lib/chart/theme.ts"],
       thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 },
     },
   },
