@@ -39,8 +39,8 @@ importers:
         specifier: ^5.104.0
         version: 5.104.0(react@19.3.0)
       '@tradecanvas/chart':
-        specifier: ^1.2.0
-        version: 1.2.0
+        specifier: ^1.3.0
+        version: 1.3.0
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3
@@ -909,14 +909,14 @@ packages:
     peerDependencies:
       react: ^18 || ^19
 
-  '@tradecanvas/chart@1.2.0':
-    resolution: {integrity: sha512-UyIFvo5WMb1PmNyzTfFYoSpgtE71SebOxCNJJc6iU9bQ/GsqM8A2m82s0MqFYN1t+oLzDpwtwntbrE49uPrNbA==}
+  '@tradecanvas/chart@1.3.0':
+    resolution: {integrity: sha512-OET8dacmuuJOqW1v7Kp9bVr3JpSV68UoEJeBKT5Uimg3NH3gagZuTmeWfA4szw7e0+iKotv4ei1YrV5+kwMU/Q==}
 
-  '@tradecanvas/commons@1.2.0':
-    resolution: {integrity: sha512-tl3BKYtGHxIZimjqSkIJlBukVE6bbuRK+IlTRxcNdO0GEjFhCQ4vjyWNmAUJHUcrl2yd2dr8h8kbxSG/CSs4kQ==}
+  '@tradecanvas/commons@1.3.0':
+    resolution: {integrity: sha512-sf7/pP92IGTfQxrJ5KkrlqGkcL5ejcCMkmzyJyxXHbtJior6V+LNHG651EeHALyOFwEA/3uJ3lOTPcpAVYnf3w==}
 
-  '@tradecanvas/core@1.2.0':
-    resolution: {integrity: sha512-4fLWKGhyg9Nu8kebXlkAeQq5nNsNgJuOx0PJW6QbsuNIKqQunx6Hnup9lAEX+B2O+CSnWoAWDqUn0WCU4aUMGQ==}
+  '@tradecanvas/core@1.3.0':
+    resolution: {integrity: sha512-7TvU48nC4kZuq2d5qoVFlrcTlSmujEP+2/3PhzkMaHWmaWAuU5SpZezjjtjqufbJIQgbLYrr+2qbMMQJeCLC3w==}
 
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
@@ -2745,16 +2745,16 @@ snapshots:
       '@tanstack/query-core': 5.104.0
       react: 19.3.0
 
-  '@tradecanvas/chart@1.2.0':
+  '@tradecanvas/chart@1.3.0':
     dependencies:
-      '@tradecanvas/commons': 1.2.0
-      '@tradecanvas/core': 1.2.0
+      '@tradecanvas/commons': 1.3.0
+      '@tradecanvas/core': 1.3.0
 
-  '@tradecanvas/commons@1.2.0': {}
+  '@tradecanvas/commons@1.3.0': {}
 
-  '@tradecanvas/core@1.2.0':
+  '@tradecanvas/core@1.3.0':
     dependencies:
-      '@tradecanvas/commons': 1.2.0
+      '@tradecanvas/commons': 1.3.0
 
   '@types/chai@5.2.3':
     dependencies:

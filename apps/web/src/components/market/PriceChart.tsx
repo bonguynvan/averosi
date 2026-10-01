@@ -36,7 +36,7 @@ export function PriceChart({ symbol }: { symbol: string }) {
   useEffect(() => {
     const el = container.current;
     if (!el || state.status !== "ready") return;
-    let chart: { setData(bars: Bar[]): void; setMarket(config: { type: "crypto"; pricePrecision: number }): void; destroy(): void; resize(): void } | null = null;
+    let chart: { setData(bars: Bar[]): void; setLocale(locale: string): void; setMarket(config: { type: "crypto"; pricePrecision: number }): void; destroy(): void; resize(): void } | null = null;
     let disposed = false;
     const observer = new ResizeObserver(() => chart?.resize());
 
@@ -51,6 +51,7 @@ export function PriceChart({ symbol }: { symbol: string }) {
         // Read-only market view: no trading overlay, orders, drawings or indicators (LEGAL_REGISTER R1, R4).
         features: { trading: false, tradingContextMenu: false, drawings: false, indicators: false, volume: true },
       });
+      chart.setLocale("vi");
       chart.setMarket({ type: "crypto", pricePrecision: pricePrecisionFor(state.bars.at(-1)?.close ?? 0) });
       chart.setData([...state.bars]);
       observer.observe(el);
