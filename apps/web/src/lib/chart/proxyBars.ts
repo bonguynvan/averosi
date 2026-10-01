@@ -1,4 +1,4 @@
-import { CANDLE_TIMEFRAMES, type Timeframe } from "../market/candles";
+import { CANDLE_TIMEFRAMES, type Timeframe } from "@app/core";
 
 export interface ProxyBar {
   time: number;

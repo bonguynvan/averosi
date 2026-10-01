@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { buildTerminalTheme } from "@/lib/chart/theme";
-import type { Bar, Timeframe } from "@/lib/market/candles";
+import type { Bar, Timeframe } from "@app/core";
 
 const TIMEFRAMES: readonly { readonly value: Timeframe; readonly label: string }[] = [
   { value: "1h", label: "1 giờ" },

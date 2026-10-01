@@ -1,18 +1,6 @@
+import type { Bar, Timeframe } from "@app/core";
 import { z } from "zod";
 import { fetchJson } from "./http";
-
-/** Timeframes both Coinbase (granularity) and Kraken (interval) serve natively. */
-export const CANDLE_TIMEFRAMES = ["1m", "5m", "15m", "1h", "1d"] as const;
-export type Timeframe = (typeof CANDLE_TIMEFRAMES)[number];
-
-export interface Bar {
-  readonly time: number;
-  readonly open: number;
-  readonly high: number;
-  readonly low: number;
-  readonly close: number;
-  readonly volume: number;
-}
 
 export interface CandleResult {
   readonly source: string;
@@ -36,9 +24,6 @@ export function candleTtlMs(timeframe: Timeframe): number {
   return TIMEFRAMES[timeframe].ttlMs;
 }
 
-export function parseTimeframe(input: string): Timeframe | null {
-  return input in TIMEFRAMES ? (input as Timeframe) : null;
-}
 
 // Coinbase: [time, low, high, open, close, volume], newest first.
 const CoinbaseCandles = z.array(z.tuple([z.number(), z.number(), z.number(), z.number(), z.number(), z.number()]));

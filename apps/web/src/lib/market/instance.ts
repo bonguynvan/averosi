@@ -1,11 +1,18 @@
 import "server-only";
-import { MARKET_ASSETS, type MarketOverview, getMarketOverview } from "@app/core";
+import { MARKET_ASSETS, type MarketOverview, type Timeframe, getMarketOverview } from "@app/core";
+import {
+  type CandleResult,
+  candleTtlMs,
+  createBitstampSource,
+  createCandleSource,
+  createCoinbaseSource,
+  createGeminiSource,
+  createKrakenSource,
+  createTtlCache,
+  createVietcombankFx,
+} from "@app/market-data";
 import { createRateLimiter } from "../risk/rateLimit";
-import { type CandleResult, type Timeframe, candleTtlMs, createCandleSource } from "./candles";
-import { createBitstampSource, createCoinbaseSource, createGeminiSource, createKrakenSource } from "./exchanges";
 import { FIXTURE_CANDLES, FIXTURE_FX, FIXTURE_MARKET_SOURCES } from "./fixtures";
-import { createVietcombankFx } from "./fx";
-import { createTtlCache } from "./ttlCache";
 
 const OVERVIEW_TTL_MS = 60_000;
 const FX_TTL_MS = 30 * 60_000;

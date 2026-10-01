@@ -1,5 +1,5 @@
 import { type FxSource, type MarketSource, MARKET_ASSETS, sourced } from "@app/core";
-import type { CandleSource } from "./candles";
+import type { CandleSource } from "@app/market-data";
 
 /** Deterministic offline market data for e2e tests (DATA_MODE=fixture). Never enabled by default. */
 const AT = new Date("2026-10-01T08:00:00Z");

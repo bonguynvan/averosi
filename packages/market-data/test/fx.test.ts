@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { createVietcombankFx, parseVietcombankUsdTransfer } from "@/lib/market/fx";
+import { createVietcombankFx, parseVietcombankUsdTransfer } from "../src/fx";
 
 const XML = `<!--For reference only. Only one request every 5 minutes!-->
 <ExrateList>

@@ -1,6 +1,6 @@
-import { findAsset } from "@app/core";
+import { findAsset, parseTimeframe } from "@app/core";
+import { candleTtlMs } from "@app/market-data";
 import { type NextRequest, NextResponse } from "next/server";
-import { candleTtlMs, parseTimeframe } from "@/lib/market/candles";
 import { candleRateLimiter, candles } from "@/lib/market/instance";
 import { clientKeyFromHeaders } from "@/lib/risk/form";
 

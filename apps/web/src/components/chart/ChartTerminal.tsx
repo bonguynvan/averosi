@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { buildTerminalTheme } from "@/lib/chart/theme";
 import { fetchProxyBars } from "@/lib/chart/proxyBars";
 import { type QuoteDto, toWatchlistUpdates } from "@/lib/chart/watchlist";
-import { CANDLE_TIMEFRAMES } from "@/lib/market/candles";
+import { CANDLE_TIMEFRAMES } from "@app/core";
 
 const POLL_MS = 15_000;
 const HISTORY_LIMIT = 300;

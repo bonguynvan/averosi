@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { createTtlCache } from "@/lib/market/ttlCache";
+import { createTtlCache } from "../src/ttlCache";
 
 describe("createTtlCache", () => {
   test("serves cached value within TTL, shares in-flight loads, refreshes after TTL", async () => {

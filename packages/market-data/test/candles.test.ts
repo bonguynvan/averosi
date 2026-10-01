@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
-import { CANDLE_TIMEFRAMES, candleTtlMs, createCandleSource, parseTimeframe } from "@/lib/market/candles";
+import { CANDLE_TIMEFRAMES, parseTimeframe } from "@app/core";
+import { candleTtlMs, createCandleSource } from "../src/candles";
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
 

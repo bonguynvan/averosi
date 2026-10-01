@@ -11,7 +11,7 @@ const SECURITY_HEADERS = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  transpilePackages: ["@app/core"],
+  transpilePackages: ["@app/core", "@app/market-data"],
   async headers() {
     return [{ source: "/:path*", headers: SECURITY_HEADERS }];
   },

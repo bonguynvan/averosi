@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { createBitstampSource, createCoinbaseSource, createGeminiSource, createKrakenSource } from "@/lib/market/exchanges";
+import { createBitstampSource, createCoinbaseSource, createGeminiSource, createKrakenSource } from "../src/exchanges";
 
 const AT = new Date(0);
 const now = () => AT;
