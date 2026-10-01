@@ -11,7 +11,9 @@ const SECURITY_HEADERS = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  transpilePackages: ["@app/core", "@app/market-data"],
+  transpilePackages: ["@app/core", "@app/market-data", "@app/store"],
+  // Node-only drivers stay external to the server bundle.
+  serverExternalPackages: ["postgres", "ioredis"],
   async headers() {
     return [{ source: "/:path*", headers: SECURITY_HEADERS }];
   },

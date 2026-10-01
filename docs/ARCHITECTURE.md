@@ -42,29 +42,33 @@ Custody, signing, swaps, order routing, on/off-ramp, OTC/P2P rates, token issuan
 ## 2. System overview
 
 ```
-             Cloudflare (DNS, TLS, cache, WAF)
-                            │
-                  ┌─────────▼──────────┐
-                  │  Caddy (VPS)       │
-                  └─────────┬──────────┘
-                            │
-        ┌───────────────────▼─────────────────────┐
-        │  apps/web — Next.js (App Router, RSC)   │
-        │  pages · route handlers /api/* (GET)    │
-        └───────┬───────────────────────┬─────────┘
-                │ read                  │ read
-        ┌───────▼───────┐       ┌───────▼────────┐
-        │ Redis (cache) │◄──────┤ apps/worker    │  scheduled jobs:
-        └───────────────┘ write │ (Node, cron)   │  prices 60s, SBV rate 1h,
-                                └───────┬────────┘  risk lists 24h
-                                        │
-                     External read-only sources (HTTP/RPC)
-         price aggregator · SBV · public RPC/indexer · OFAC · scam lists
+ Exchanges (REST + public WebSocket)          Vietcombank FX
+        │                                          │
+        ▼                                          ▼
+ ┌──────────────────────── apps/worker (server-side only) ───────────────────────┐
+ │ overview 15s → median quotes ─┐   candles per timeframe → upsert → indicators  │
+ │ WS tickers → LivePriceBook ─┐ │                                                │
+ └─────────────────────────────┼─┼────────────────────────────────────────────────┘
+                               │ │                      │
+              Redis pub/sub ◄──┘ └──► Redis (overview, ta:*)   Postgres (candles, asset_quotes, fx_rates)
+                     │                       │                          │
+ ┌───────────────────▼───────────────────────▼──────────────────────────▼─────────┐
+ │ apps/web (Next.js) — MARKET_BACKEND=store: read-only view of the store         │
+ │  pages (RSC) · /api/nen · /api/phan-tich · /api/thi-truong · /api/truc-tiep SSE │
+ └─────────────────────────────────────┬──────────────────────────────────────────┘
+                                       │ same-origin only (R11)
+                                    Browser
 ```
 
-- **No database in v1.** All state is either cache (Redis, rebuildable) or content (git). A Postgres instance is added only when a feature needs durable state, and that feature requires a legal review first because it probably means personal data.
-- **Request path never calls external APIs directly** for hot data. The worker fills Redis, and the web layer reads Redis. Missing or stale cache shows "dữ liệu tạm thời không khả dụng" with the stale timestamp, never invented numbers.
-- **Risk check** (implemented): a POST server action (`app/rui-ro/actions.ts`, so addresses never enter URLs or access logs) validates input, applies a per-IP in-memory limit (10/min), and runs `checkAddressRisk` from core. That use case calls the OFAC and ScamSniffer lists (cached in memory for 6h, last good copy served on failure) and RPC reads (code, nonce, balance, proxy slots, EIP-7702 delegation) in parallel. Reports are cached per chain+address for 10 minutes. Any failing list makes the verdict "unknown", never "low". Caches are in-process for now; move to Redis when the worker or a second instance exists.
+- **Backends:** `MARKET_BACKEND=direct` (default for dev) makes the web process call exchanges itself with in-process caches, and "live" means the overview polled every 15s. `MARKET_BACKEND=store` (production) only reads what the worker writes. `DATA_MODE=fixture` (e2e) uses the direct backend with deterministic data.
+- **Worker** (`apps/worker`):
+  - overview every 15s, written to Redis, with a per-minute history row in Postgres;
+  - candles 1m/5m/15m/1h/1d on staggered intervals, upserted into Postgres, then the indicator snapshot (SMA/EMA/RSI/MACD/Bollinger/ATR) is written to Redis;
+  - Coinbase + Kraken WebSocket tickers, combined as the per-symbol median of fresh ticks and published to `market:live` at most once per second;
+  - daily retention: 1m 7d, 5m 30d, 15m 90d, 1h 2y, quotes 180d, 1d kept.
+- **Web realtime:** one Redis subscription per web process (`liveHub`) is fanned out to SSE clients (`/api/truc-tiep`, heartbeat 20s, ≤4 streams per client). The browser converts USD to VND with the page's Vietcombank rate.
+- **Technical analysis** lives in `@app/core` (pure functions) and is computed server-side (worker, or on demand in direct mode), never in the browser. Values only, no signals (R4).
+- **No personal data** is stored anywhere: the store holds market data only.
 
 ## 3. Repository layout
 
@@ -93,7 +97,10 @@ averosi-v2/
 │   │       ├── components/           # by feature: market/, risk/, wallet/, legal/, ui/
 │   │       ├── infrastructure/       # adapters implementing core ports (read-side)
 │   │       └── styles/               # imports design/tokens.css, Tailwind v4 @theme
-│   └── worker/                       # (added with the first data job) cron → adapters → Redis
+│   └── worker/                       # market-data worker (jobs, realtime streams)
+├── packages/market-data/             # exchange/FX/candle adapters + WS tickers (server-only)
+├── packages/store/                   # Postgres (migrations, repos) + Redis (cache, pub/sub)
+├── tools/legal-watch/                # weekly Perplexity legal scan → GitHub issue
 ├── test/e2e/                         # Playwright
 └── docker/                           # compose, Caddyfile
 ```
@@ -130,6 +137,9 @@ averosi-v2/
 Every adapter returns `{ data, source, fetchedAt }` so the UI can always attribute and timestamp.
 
 ## 6. Security
+
+- Per-client limits (risk checks, candle API, live streams) key on `cf-connecting-ip` / `x-forwarded-for`. **The reverse proxy must set these headers.** Without them, all visitors share one key: rate limits become global, and live streams fall back to a global cap of 500.
+
 
 - Read-only by construction: no private-key code paths, no `eth_sendTransaction`, no wallet connect in v1.
 - Strict CSP with a per-request nonce (`apps/web/src/proxy.ts`), so all pages render dynamically. Fonts are self-hosted by `next/font`, and there are no third-party scripts.

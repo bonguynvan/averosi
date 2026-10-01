@@ -16,6 +16,7 @@
   "dependencies": {
     "@app/core": "workspace:*",
     "@app/market-data": "workspace:*",
+    "@app/store": "workspace:*",
     "@gsap/react": "^2.1.2",
     "@tradecanvas/chart": "^1.1.0",
     "gray-matter": "^4.0.3",

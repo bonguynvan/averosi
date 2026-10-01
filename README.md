@@ -28,6 +28,11 @@ pnpm install
 pnpm dev            # http://localhost:3000
 pnpm check          # lint + typecheck + test + build
 pnpm test:e2e       # Playwright (cần: pnpm --filter @app/web exec playwright install chromium)
+
+# Chạy đầy đủ với worker dữ liệu (Postgres + Redis qua Docker)
+pnpm infra:up
+pnpm worker                         # cửa sổ 1
+MARKET_BACKEND=store DATABASE_URL=postgres://app:app@localhost:55432/market REDIS_URL=redis://localhost:56379 pnpm dev   # cửa sổ 2
 ```
 
 ## Tài liệu

@@ -20,6 +20,7 @@ import { type BoardRow, PriceBoard } from "@/components/landing/PriceBoard";
 import { type Stat, StatsStrip } from "@/components/landing/StatsStrip";
 import { ToolsBento } from "@/components/landing/ToolsBento";
 import { Change } from "@/components/market/Change";
+import { LivePricesProvider } from "@/components/market/LivePrices";
 import { BRAND } from "@/lib/brand";
 import { listInstruments } from "@/lib/legal";
 import { marketOverview, sparklineSeries } from "@/lib/market/instance";
@@ -53,6 +54,7 @@ async function BoardSection() {
   return (
     <PriceBoard
       updatedAt={updated ? vnTime(updated) : "—"}
+      vndPerUsd={overview.fx.status === "ok" ? Number(overview.fx.rateVnd) : null}
       tabs={[
         { id: "volume", label: "Khối lượng lớn", rows: byVolume.map((a) => toRow(a, series)) },
         { id: "move", label: "Biến động mạnh (±)", rows: byMove.map((a) => toRow(a, series)) },
@@ -132,6 +134,7 @@ function BlockSkeleton({ className }: { className: string }) {
 
 export default function LandingPage() {
   return (
+    <LivePricesProvider>
     <div className="flex flex-col gap-10">
       <Hero
         board={
@@ -159,5 +162,6 @@ export default function LandingPage() {
         Giá tham khảo, không phải báo giá giao dịch và không phải lời khuyên đầu tư. Tên sàn chỉ dùng để ghi nguồn dữ liệu.
       </p>
     </div>
+    </LivePricesProvider>
   );
 }

@@ -1,10 +1,11 @@
 import { type MarketAsset, findAsset, formatUsdMicros, formatVnd, formatVndCompact } from "@app/core";
 import Link from "next/link";
 import { Change } from "./Change";
+import { LiveVndPrice } from "./LivePrices";
 
 const TOTAL_SOURCES = 4;
 
-export function MarketTable({ assets }: { assets: readonly MarketAsset[] }) {
+export function MarketTable({ assets, vndPerUsd }: { assets: readonly MarketAsset[]; vndPerUsd: number | null }) {
   return (
     <table className="w-full font-mono text-[13px]" data-testid="market-table">
       <caption className="sr-only">Giá tham khảo các tài sản mã hóa, quy đổi VNĐ</caption>
@@ -27,7 +28,9 @@ export function MarketTable({ assets }: { assets: readonly MarketAsset[] }) {
                 <span className="text-[11px] text-text-muted">{findAsset(a.symbol)?.name}</span>
               </Link>
             </th>
-            <td className="py-2 pr-3 text-right text-accent-soft">{a.priceVnd === null ? "—" : formatVnd(a.priceVnd)}</td>
+            <td className="py-2 pr-3 text-right text-accent-soft">
+              {a.priceVnd === null ? "—" : <LiveVndPrice symbol={a.symbol} initial={formatVnd(a.priceVnd)} vndPerUsd={vndPerUsd} />}
+            </td>
             <td className="hidden py-2 pr-3 text-right text-text-muted md:table-cell">{formatUsdMicros(a.priceUsdMicros)}</td>
             <td className="py-2 pr-3 text-right">
               <Change bps={a.change24hBps} />

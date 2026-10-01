@@ -4,12 +4,14 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { Change } from "@/components/market/Change";
+import { LiveBadge, LivePricesProvider, LiveVndPrice } from "@/components/market/LivePrices";
+import { TechnicalPanel } from "@/components/market/TechnicalPanel";
 import { MarketNotice } from "@/components/market/MarketNotice";
 import { PriceChart } from "@/components/market/PriceChart";
 import { SourceStatusList } from "@/components/market/SourceStatusList";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
 import { Panel } from "@/components/ui/Panel";
-import { marketOverview } from "@/lib/market/instance";
+import { indicators, marketOverview } from "@/lib/market/instance";
 
 type Props = { params: Promise<{ symbol: string }> };
 
@@ -30,10 +32,16 @@ export default async function AssetPage({ params }: Props) {
 }
 
 async function AssetContent({ asset }: { asset: AssetInfo }) {
-  const overview = await marketOverview();
+  const [overview, hourly, daily] = await Promise.all([
+    marketOverview(),
+    indicators(asset.symbol, "1h").catch(() => null),
+    indicators(asset.symbol, "1d").catch(() => null),
+  ]);
   const snapshot = overview.assets.find((a) => a.symbol === asset.symbol);
+  const vndPerUsd = overview.fx.status === "ok" ? Number(overview.fx.rateVnd) : null;
 
   return (
+    <LivePricesProvider>
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="flex min-w-0 flex-col gap-4">
         <nav aria-label="Đường dẫn" className="font-mono text-[12px] text-text-muted">
@@ -47,12 +55,16 @@ async function AssetContent({ asset }: { asset: AssetInfo }) {
             <h1 className="font-mono text-[22px] leading-7 font-bold text-text">
               {asset.name} <span className="text-text-muted">({asset.symbol})</span>
             </h1>
-            <p className="label-caps mt-1 text-text-muted">Giá tham khảo · không phải báo giá giao dịch</p>
+            <p className="label-caps mt-1 flex flex-wrap items-center gap-3 text-text-muted">
+              Giá tham khảo · không phải báo giá giao dịch <LiveBadge />
+            </p>
           </div>
           {snapshot ? (
             <dl className="grid grid-cols-[auto_auto] gap-x-4 gap-y-0.5 text-right font-mono text-[13px]" data-testid="asset-price">
               <dt className="text-left text-text-muted">VNĐ</dt>
-              <dd className="text-[18px] font-semibold text-accent-soft">{snapshot.priceVnd === null ? "—" : formatVnd(snapshot.priceVnd)}</dd>
+              <dd className="text-[18px] font-semibold text-accent-soft">
+                {snapshot.priceVnd === null ? "—" : <LiveVndPrice symbol={asset.symbol} initial={formatVnd(snapshot.priceVnd)} vndPerUsd={vndPerUsd} />}
+              </dd>
               <dt className="text-left text-text-muted">USD</dt>
               <dd>{formatUsdMicros(snapshot.priceUsdMicros)}</dd>
               <dt className="text-left text-text-muted">24h</dt>
@@ -73,6 +85,8 @@ async function AssetContent({ asset }: { asset: AssetInfo }) {
           <PriceChart symbol={asset.symbol} />
         </Panel>
 
+        <TechnicalPanel hourly={hourly} daily={daily} />
+
         <Panel title="Nguồn dữ liệu">
           {snapshot && (
             <p className="mb-2 font-mono text-[12px] text-text-muted">
@@ -86,5 +100,6 @@ async function AssetContent({ asset }: { asset: AssetInfo }) {
         <MarketNotice />
       </aside>
     </div>
+    </LivePricesProvider>
   );
 }

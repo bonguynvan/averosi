@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useId, useRef, useState } from "react";
 import { MOTION, gsap, useGSAP } from "@/lib/motion/gsap";
 import { Change } from "../market/Change";
+import { LiveVndPrice } from "../market/LivePrices";
 import { Sparkline } from "./Sparkline";
 
 export interface BoardRow {
@@ -18,10 +19,11 @@ export interface BoardRow {
 interface PriceBoardProps {
   readonly tabs: readonly { readonly id: string; readonly label: string; readonly rows: readonly BoardRow[] }[];
   readonly updatedAt: string;
+  readonly vndPerUsd: number | null;
 }
 
 /** Hero price card (Binance-style tabs). Reference prices only — rows link to our own asset pages. */
-export function PriceBoard({ tabs, updatedAt }: PriceBoardProps) {
+export function PriceBoard({ tabs, updatedAt, vndPerUsd }: PriceBoardProps) {
   const id = useId();
   const [active, setActive] = useState(tabs[0]?.id ?? "");
   const current = tabs.find((t) => t.id === active) ?? tabs[0];
@@ -75,7 +77,7 @@ export function PriceBoard({ tabs, updatedAt }: PriceBoardProps) {
                 <Sparkline data={r.spark} />
               </span>
               <span className="flex flex-col items-end font-mono text-[13px]">
-                <span className="text-text">{r.priceVnd}</span>
+                <LiveVndPrice symbol={r.symbol} initial={r.priceVnd} vndPerUsd={vndPerUsd} className="text-text" />
                 <Change bps={r.change24hBps} />
               </span>
             </Link>

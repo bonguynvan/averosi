@@ -29,6 +29,9 @@ importers:
       '@app/market-data':
         specifier: workspace:*
         version: link:../../packages/market-data
+      '@app/store':
+        specifier: workspace:*
+        version: link:../../packages/store
       '@gsap/react':
         specifier: ^2.1.2
         version: 2.1.2(gsap@3.15.0)(react@19.3.0)
