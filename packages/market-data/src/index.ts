@@ -4,3 +4,4 @@ export * from "./fx";
 export * from "./candles";
 export * from "./ttlCache";
 export * from "./realtime";
+export * from "./logScanner";

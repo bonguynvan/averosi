@@ -4,8 +4,10 @@ import { type Chain, createPublicClient, http } from "viem";
 import { base, bsc, mainnet } from "viem/chains";
 import { z } from "zod";
 import { type RpcClient, createChainReader } from "./chainReader";
+import { createLogScanner } from "@app/market-data";
+import { createApprovalService } from "../approvals/service";
 import { type MulticallClient, createTokenReader, createWalletService } from "../wallet/portfolio";
-import { FIXTURE_TOKENS, createFixtureDeps } from "./fixtures";
+import { FIXTURE_APPROVAL_MULTICALL, FIXTURE_APPROVAL_SCANNER, FIXTURE_TOKENS, createFixtureDeps, fixtureRpc } from "./fixtures";
 import { createRateLimiter } from "./rateLimit";
 import { createRemoteAddressList } from "./remoteAddressList";
 import { createRiskService } from "./service";
@@ -33,6 +35,10 @@ const EnvSchema = z.object({
   RPC_URL_ETHEREUM: z.url().default("https://ethereum-rpc.publicnode.com"),
   RPC_URL_BASE: z.url().default("https://base-rpc.publicnode.com"),
   RPC_URL_BSC: z.url().default("https://bsc-rpc.publicnode.com"),
+  // Archive-capable endpoints with an API key (Alchemy, QuickNode, Ankr, PublicNode token…). Secrets: env only.
+  ARCHIVE_RPC_URL_ETHEREUM: z.url().optional(),
+  ARCHIVE_RPC_URL_BASE: z.url().optional(),
+  ARCHIVE_RPC_URL_BSC: z.url().optional(),
 });
 
 const env = EnvSchema.parse({
@@ -40,6 +46,9 @@ const env = EnvSchema.parse({
   RPC_URL_ETHEREUM: process.env.RPC_URL_ETHEREUM || undefined,
   RPC_URL_BASE: process.env.RPC_URL_BASE || undefined,
   RPC_URL_BSC: process.env.RPC_URL_BSC || undefined,
+  ARCHIVE_RPC_URL_ETHEREUM: process.env.ARCHIVE_RPC_URL_ETHEREUM || undefined,
+  ARCHIVE_RPC_URL_BASE: process.env.ARCHIVE_RPC_URL_BASE || undefined,
+  ARCHIVE_RPC_URL_BSC: process.env.ARCHIVE_RPC_URL_BSC || undefined,
 });
 
 const CHAIN_CONFIG: Record<ChainKey, { chain: Chain; url: string }> = {
@@ -84,3 +93,37 @@ export const walletRateLimiter = createRateLimiter({ limit: 20, windowMs: 60_000
 
 /** 10 checks per minute per client. */
 export const riskRateLimiter = createRateLimiter({ limit: 10, windowMs: 60_000 });
+
+const ARCHIVE_URL: Record<ChainKey, string | undefined> = {
+  ethereum: env.ARCHIVE_RPC_URL_ETHEREUM,
+  base: env.ARCHIVE_RPC_URL_BASE,
+  bsc: env.ARCHIVE_RPC_URL_BSC,
+};
+/** Log scans are bounded per request: enough for most wallets, otherwise reported as partial. */
+const MAX_LOG_REQUESTS = 60;
+
+function archiveScanner(chain: ChainKey) {
+  const url = ARCHIVE_URL[chain];
+  if (!url) return null;
+  const client = createPublicClient({ chain: CHAIN_CONFIG[chain].chain, transport: http(url, { timeout: 30_000, retryCount: 1 }) });
+  return createLogScanner({ request: (method, params) => client.request({ method, params } as never), maxRequests: MAX_LOG_REQUESTS });
+}
+
+/** Token-approval checks (/quyen): full-history scan via archive RPC, current state via regular RPC. */
+export const approvalService = createApprovalService(
+  env.DATA_MODE === "fixture"
+    ? { ...sources, scannerFor: () => FIXTURE_APPROVAL_SCANNER, multicallFor: () => FIXTURE_APPROVAL_MULTICALL, ttlMs: 5 * 60_000 }
+    : { ...sources, scannerFor: archiveScanner, multicallFor: clientFor, ttlMs: 5 * 60_000 },
+);
+
+/** Full scans are expensive: 6 per minute per client. */
+export const approvalRateLimiter = createRateLimiter({ limit: 6, windowMs: 60_000 });
+
+/** Raw JSON-RPC against the regular (non-archive) endpoint; used by the allow-listed browser proxy. */
+export function rpcRequest(chain: ChainKey, method: string, params: readonly string[]): Promise<unknown> {
+  if (env.DATA_MODE === "fixture") return Promise.resolve(fixtureRpc(chain, method, params));
+  return (clientFor(chain) as unknown as { request: (a: { method: string; params: readonly string[] }) => Promise<unknown> }).request({ method, params });
+}
+
+/** Transaction tracking polls every few seconds; 120/min per client is ample. */
+export const rpcProxyLimiter = createRateLimiter({ limit: 120, windowMs: 60_000 });

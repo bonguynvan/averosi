@@ -1,12 +1,13 @@
 "use client";
 
 import { base, bsc, mainnet } from "viem/chains";
-import { createConfig, injected, unstable_connector } from "wagmi";
+import { createConfig, fallback, http, injected, unstable_connector } from "wagmi";
 
 /**
  * Wallet connection is read-only: we learn the visitor's address and network, nothing else.
- * Any browser-side RPC goes through the visitor's own wallet (unstable_connector), so connecting
- * never makes the browser contact a third-party RPC or exchange (R11 spirit).
+ * Browser-side reads go through the visitor's own wallet (unstable_connector); when that wallet only
+ * announces via EIP-6963 (no window.ethereum), they fall back to our same-origin, allow-listed proxy
+ * (/api/rpc/[chain]). The browser never contacts a third-party RPC or exchange (R11 spirit).
  */
 export const SUPPORTED_WALLET_CHAINS = [mainnet, base, bsc] as const;
 
@@ -16,9 +17,9 @@ export const wagmiConfig = createConfig({
   multiInjectedProviderDiscovery: true, // EIP-6963: MetaMask, Rabby, Coin98, Trust, …
   ssr: true,
   transports: {
-    [mainnet.id]: unstable_connector(injected),
-    [base.id]: unstable_connector(injected),
-    [bsc.id]: unstable_connector(injected),
+    [mainnet.id]: fallback([unstable_connector(injected), http("/api/rpc/ethereum")]),
+    [base.id]: fallback([unstable_connector(injected), http("/api/rpc/base")]),
+    [bsc.id]: fallback([unstable_connector(injected), http("/api/rpc/bsc")]),
   },
 });
 

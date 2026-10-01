@@ -56,7 +56,7 @@ test("no wallet installed: neutral guidance and the read-only safety note", asyn
   await page.goto("/");
   await page.getByTestId("connect-wallet").click();
   await expect(page.getByTestId("no-wallet")).toBeVisible();
-  await expect(page.getByText("Không bao giờ yêu cầu chữ ký, cụm từ khôi phục hay chuyển tiền")).toBeVisible();
+  await expect(page.getByText("Không bao giờ yêu cầu cụm từ khôi phục hay chuyển tiền")).toBeVisible();
 });
 
 test("EIP-6963 wallet: discover, connect (read-only), watch my wallet", async ({ page }) => {

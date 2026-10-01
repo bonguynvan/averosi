@@ -1,7 +1,7 @@
 import { findBannedCopy } from "@app/core";
 import { expect, test } from "@playwright/test";
 
-const ROUTES = ["/", "/thi-truong", "/bieu-do", "/kien-thuc/nhan-dien-lua-dao", "/kien-thuc?chu-de=thue", "/tai-san/btc", "/phap-ly/nghi-dinh-284-2026-nd-cp", "/phap-ly?nhom=thue", "/rui-ro", "/vi", "/thue", "/phap-ly", "/kien-thuc", "/mien-tru-trach-nhiem", "/dieu-khoan", "/quyen-rieng-tu", "/thay-doi-chinh-sach"];
+const ROUTES = ["/", "/thi-truong", "/bieu-do", "/quyen", "/kien-thuc/nhan-dien-lua-dao", "/kien-thuc?chu-de=thue", "/tai-san/btc", "/phap-ly/nghi-dinh-284-2026-nd-cp", "/phap-ly?nhom=thue", "/rui-ro", "/vi", "/thue", "/phap-ly", "/kien-thuc", "/mien-tru-trach-nhiem", "/dieu-khoan", "/quyen-rieng-tu", "/thay-doi-chinh-sach"];
 const VIEWPORTS = [320, 768, 1024, 1440];
 
 for (const route of ROUTES) {

@@ -7,8 +7,8 @@ import { SUPPORTED_WALLET_CHAINS, chainKeyForId } from "@/lib/web3/config";
 
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 
-/** Never asks for signatures, seed phrases or transfers — said explicitly, as an anti-phishing cue. */
-const SAFETY = "Chỉ đọc địa chỉ ví. Không bao giờ yêu cầu chữ ký, cụm từ khôi phục hay chuyển tiền.";
+/** Never asks for seed phrases or transfers; signatures only for visitor-initiated revokes (R12) — said explicitly, as an anti-phishing cue. */
+const SAFETY = "Không bao giờ yêu cầu cụm từ khôi phục hay chuyển tiền. Chỉ yêu cầu ký khi bạn tự bấm “Thu hồi” quyền token của chính mình.";
 
 export function ConnectWallet() {
   const id = useId();
