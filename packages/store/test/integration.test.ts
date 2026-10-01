@@ -2,6 +2,7 @@ import type { IndicatorSnapshot, MarketOverview } from "@app/core";
 import { Redis } from "ioredis";
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "vitest";
 import { createMarketCache, type LivePrice, type MarketCache } from "../src/cache";
+import { createAssetRepo } from "../src/assetRepo";
 import { createCandleRepo } from "../src/candleRepo";
 import { type Sql, createSql, migrate } from "../src/db";
 import { createQuoteRepo } from "../src/quoteRepo";
@@ -40,7 +41,7 @@ describe.skipIf(!DB_URL)("postgres repositories", () => {
     await migrate(sql);
   });
   beforeEach(async () => {
-    await sql`TRUNCATE candles, asset_quotes, fx_rates`;
+    await sql`TRUNCATE candles, asset_quotes, fx_rates, assets`;
   });
   afterAll(async () => {
     await sql.end();
@@ -48,6 +49,20 @@ describe.skipIf(!DB_URL)("postgres repositories", () => {
 
   test("migrate is idempotent", async () => {
     expect(await migrate(sql)).toEqual([]);
+  });
+
+  test("assets: upsert universe; deactivate missing only when asked", async () => {
+    const repo = createAssetRepo(sql);
+    const btc = { symbol: "BTC", name: "Bitcoin", sources: ["Coinbase", "Kraken"], venues: { Coinbase: "BTC-USD", Kraken: "XBTUSD" } };
+    const eth = { symbol: "ETH", name: "Ethereum", sources: ["Coinbase", "Kraken"], venues: { Coinbase: "ETH-USD", Kraken: "ETHUSD" } };
+    expect(await repo.save([btc, eth], { deactivateMissing: true })).toEqual({ upserted: 2, deactivated: 0 });
+    expect(await repo.save([btc], { deactivateMissing: false })).toEqual({ upserted: 1, deactivated: 0 });
+    expect((await repo.active()).map((a) => a.symbol)).toEqual(["BTC", "ETH"]);
+    expect(await repo.save([{ ...btc, name: "Bitcoin (BTC)" }], { deactivateMissing: true })).toEqual({ upserted: 1, deactivated: 1 });
+    expect(await repo.active()).toEqual([{ ...btc, name: "Bitcoin (BTC)" }]);
+    expect(await repo.save([], { deactivateMissing: true })).toEqual({ upserted: 0, deactivated: 0 });
+    expect(await repo.save([eth], { deactivateMissing: false })).toEqual({ upserted: 1, deactivated: 0 });
+    expect((await repo.active()).map((a) => a.symbol)).toEqual(["BTC", "ETH"]);
   });
 
   test("candles: upsert overwrites the forming bucket; latest is ascending and limited", async () => {
@@ -109,6 +124,18 @@ describe.skipIf(!REDIS_URL)("redis cache", () => {
     await cache.setIndicators(value);
     expect(await cache.getIndicators("ETH", "1h")).toEqual(value);
     expect(await cache.getIndicators("ETH", "1d")).toBeNull();
+  });
+
+  test("rank, demand and the dirty-indicator set (shared with the Go ingestor)", async () => {
+    await cache.setRank(["BTC", "ETH"]);
+    const admin = new Redis(REDIS_URL as string);
+    expect(JSON.parse((await admin.get("market:rank")) ?? "null")).toEqual(["BTC", "ETH"]);
+    await cache.markDemand("SOL", new Date(1_000));
+    expect(await admin.zscore("market:demand", "SOL")).toBe("1000");
+    await admin.sadd("ta:dirty", "BTC|1h", "bad-entry");
+    expect(await cache.takeDirty(10)).toEqual([{ symbol: "BTC", timeframe: "1h" }]);
+    expect(await cache.takeDirty(10)).toEqual([]);
+    admin.disconnect();
   });
 
   test("live prices are delivered to subscribers", async () => {

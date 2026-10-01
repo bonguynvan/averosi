@@ -1,4 +1,4 @@
-import { type AssetInfo, findAsset, formatUsdMicros, formatVnd, formatVndCompact } from "@app/core";
+import { type AssetInfo, formatUsdMicros, formatVnd, formatVndCompact } from "@app/core";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -11,18 +11,18 @@ import { PriceChart } from "@/components/market/PriceChart";
 import { SourceStatusList } from "@/components/market/SourceStatusList";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
 import { Panel } from "@/components/ui/Panel";
-import { indicators, marketOverview } from "@/lib/market/instance";
+import { findMarketAsset, indicators, marketOverview } from "@/lib/market/instance";
 
 type Props = { params: Promise<{ symbol: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const asset = findAsset((await params).symbol);
+  const asset = await findMarketAsset((await params).symbol).catch(() => undefined);
   return asset ? { title: `${asset.name} (${asset.symbol}): giá tham khảo VNĐ` } : {};
 }
 
 export default async function AssetPage({ params }: Props) {
   // Validate before any streaming starts so unknown symbols return a real 404.
-  const asset = findAsset((await params).symbol);
+  const asset = await findMarketAsset((await params).symbol);
   if (!asset) notFound();
   return (
     <Suspense fallback={<PageSkeleton />}>

@@ -1,6 +1,7 @@
 import { type MarketSource, type SourceQuote, parseDecimalToMicros, sourced } from "@app/core";
 import { z } from "zod";
-import { HttpStatusError, changeBps, fetchJson } from "./http";
+import { changeBps, fetchJson } from "./http";
+import { COINBASE_PRODUCTS_URL, CoinbaseProducts, KRAKEN_ASSET_PAIRS_URL, KrakenAssetPairs, isLiveCoinbaseUsd, krakenUsdPairs } from "./listings";
 
 /**
  * Public market-data adapters for exchanges with USD **fiat** pairs (no stablecoin quotes).
@@ -11,16 +12,10 @@ export interface ExchangeOptions {
   readonly now?: () => Date;
 }
 
-const COINBASE_CONCURRENCY = 5;
-/** Kraken legacy pair names: query altname → response key. */
-const KRAKEN_PAIRS: Record<string, { readonly query: string; readonly keys: readonly string[] }> = {
-  BTC: { query: "XBTUSD", keys: ["XXBTZUSD", "XBTUSD"] },
-  ETH: { query: "ETHUSD", keys: ["XETHZUSD", "ETHUSD"] },
-  XRP: { query: "XRPUSD", keys: ["XXRPZUSD", "XRPUSD"] },
-  LTC: { query: "LTCUSD", keys: ["XLTCZUSD", "LTCUSD"] },
-  DOGE: { query: "XDGUSD", keys: ["XDGUSD", "XXDGZUSD"] },
-};
-const krakenPair = (symbol: string) => KRAKEN_PAIRS[symbol] ?? { query: `${symbol}USD`, keys: [`${symbol}USD`] };
+/** Kraken's pair catalog changes rarely; refetch it at most this often. */
+const KRAKEN_PAIRS_TTL_MS = 6 * 3_600_000;
+/** Whole-market responses are larger than a single ticker. */
+const BULK_TIMEOUT_MS = 15_000;
 
 function quote(source: string, symbol: string, last: string, extra: { change?: number | undefined; volume?: string | undefined }): SourceQuote[] {
   const lastUsdMicros = parseDecimalToMicros(last);
@@ -37,29 +32,21 @@ function quote(source: string, symbol: string, last: string, extra: { change?: n
   ];
 }
 
-const CoinbaseStats = z.object({ open: z.string(), last: z.string(), volume: z.string() });
-
+/** One request for every product: price, rolling-24h change (percent) and 24h base volume. */
 export function createCoinbaseSource({ fetchFn = fetch, now = () => new Date() }: ExchangeOptions = {}): MarketSource {
   const name = "Coinbase";
-  const one = async (symbol: string): Promise<SourceQuote[]> => {
-    try {
-      const s = CoinbaseStats.parse(await fetchJson(fetchFn, name, `https://api.exchange.coinbase.com/products/${symbol}-USD/stats`));
-      return quote(name, symbol, s.last, { change: changeBps(Number(s.last), Number(s.open)), volume: s.volume });
-    } catch (error) {
-      if (error instanceof HttpStatusError && error.status === 404) return []; // product not listed
-      throw error;
-    }
-  };
-
   return {
     name,
     async quotes(symbols) {
-      const results: PromiseSettledResult<SourceQuote[]>[] = [];
-      for (let i = 0; i < symbols.length; i += COINBASE_CONCURRENCY) {
-        results.push(...(await Promise.allSettled(symbols.slice(i, i + COINBASE_CONCURRENCY).map(one))));
-      }
-      if (results.length > 0 && results.every((r) => r.status === "rejected")) throw new Error(`${name}: all requests failed`);
-      return sourced(results.flatMap((r) => (r.status === "fulfilled" ? r.value : [])), name, now());
+      const { products } = CoinbaseProducts.parse(await fetchJson(fetchFn, name, COINBASE_PRODUCTS_URL, BULK_TIMEOUT_MS));
+      const bySymbol = new Map(products.filter(isLiveCoinbaseUsd).map((p) => [p.base_currency_id, p]));
+      const data = symbols.flatMap((symbol) => {
+        const p = bySymbol.get(symbol);
+        if (!p?.price) return [];
+        const percent = Number(p.price_percentage_change_24h);
+        return quote(name, symbol, p.price, { change: Number.isFinite(percent) && p.price_percentage_change_24h ? Math.round(percent * 100) : undefined, volume: p.volume_24h });
+      });
+      return sourced(data, name, now());
     },
   };
 }
@@ -69,20 +56,34 @@ const KrakenTicker = z.object({
   result: z.record(z.string(), z.object({ c: z.array(z.string()).min(1), v: z.array(z.string()).min(2) })).optional(),
 });
 
+/** Pair catalog (cached) maps our symbols to Kraken's pair keys; then one Ticker call for all of them. */
 export function createKrakenSource({ fetchFn = fetch, now = () => new Date() }: ExchangeOptions = {}): MarketSource {
   const name = "Kraken";
+  let catalog: { at: number; bySymbol: Map<string, { key: string; altname: string }> } | null = null;
+  const pairs = async () => {
+    if (catalog && now().getTime() - catalog.at < KRAKEN_PAIRS_TTL_MS) return catalog.bySymbol;
+    const list = krakenUsdPairs(KrakenAssetPairs.parse(await fetchJson(fetchFn, name, KRAKEN_ASSET_PAIRS_URL, BULK_TIMEOUT_MS)));
+    catalog = { at: now().getTime(), bySymbol: new Map(list.map((p) => [p.symbol, { key: p.key, altname: p.altname }])) };
+    return catalog.bySymbol;
+  };
+
   return {
     name,
     async quotes(symbols) {
-      const url = `https://api.kraken.com/0/public/Ticker?pair=${symbols.map((s) => krakenPair(s).query).join(",")}`;
-      const body = KrakenTicker.parse(await fetchJson(fetchFn, name, url));
+      const bySymbol = await pairs();
+      const wanted = symbols.flatMap((s) => {
+        const p = bySymbol.get(s);
+        return p ? [{ symbol: s, ...p }] : [];
+      });
+      if (wanted.length === 0) return sourced([], name, now());
+      const url = `https://api.kraken.com/0/public/Ticker?pair=${wanted.map((w) => w.altname).join(",")}`;
+      const body = KrakenTicker.parse(await fetchJson(fetchFn, name, url, BULK_TIMEOUT_MS));
       if (body.error.length > 0) throw new Error(`${name}: ${body.error.join("; ")}`);
       const result = body.result ?? {};
       // Kraken's "o" is today's UTC open, not a rolling 24h open, so no change is reported.
-      const data = symbols.flatMap((symbol) => {
-        const key = krakenPair(symbol).keys.find((k) => result[k]);
-        const t = key ? result[key] : undefined;
-        return t ? quote(name, symbol, t.c[0] as string, { volume: t.v[1] }) : [];
+      const data = wanted.flatMap((w) => {
+        const t = result[w.key] ?? result[w.altname];
+        return t ? quote(name, w.symbol, t.c[0] as string, { volume: t.v[1] }) : [];
       });
       return sourced(data, name, now());
     },

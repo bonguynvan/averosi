@@ -51,3 +51,26 @@ test("unknown asset is a 404 and candle API validates input", async ({ page, req
   expect(ok.status()).toBe(200);
   expect((await ok.json()).bars.length).toBeGreaterThan(0);
 });
+
+test("market table: search (ticker or name, accent-insensitive), sort via URL, no sort by gains", async ({ page }) => {
+  await page.goto("/thi-truong");
+  await expect(page.getByRole("status").filter({ hasText: "tài sản ·" })).toContainText("niêm yết cặp USD pháp định trên ≥ 2 nguồn");
+
+  await page.getByRole("searchbox", { name: "Tìm theo mã hoặc tên tài sản" }).fill("bitcoin");
+  await page.getByRole("button", { name: "Tìm" }).click();
+  await expect(page).toHaveURL(/\/thi-truong\?q=bitcoin$/);
+  const rows = page.getByTestId("market-table").getByRole("rowheader");
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText("BTC");
+
+  await page.getByRole("link", { name: "Mã A→Z" }).click();
+  await expect(page).toHaveURL(/\/thi-truong\?q=bitcoin&sap-xep=ma$/);
+  await expect(page.getByRole("link", { name: "Mã A→Z" })).toHaveAttribute("aria-current", "true");
+
+  await page.goto("/thi-truong?sap-xep=ma");
+  await expect(rows.first()).toContainText("ADA");
+  await expect(page.getByRole("navigation", { name: "Sắp xếp" })).not.toContainText(/tăng|giảm|biến động/i);
+
+  await page.goto("/thi-truong?q=khong-ton-tai");
+  await expect(page.getByText("Không có tài sản nào khớp.")).toBeVisible();
+});

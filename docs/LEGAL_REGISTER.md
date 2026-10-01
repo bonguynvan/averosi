@@ -43,7 +43,7 @@ MoF accepted 5/7 exchange dossiers (03/2026): VIX (VIXEX), Lộc Phát (LPEX), V
 | R7 Do not attach real-person identities to wallet addresses. Labels only for public entities with a cited public source (exchange hot wallets, sanctioned addresses). | L5, L3 (data) |
 | R8 Every page shows the disclaimer bar; every price shows source + timestamp + "tham khảo". | R3, R4 |
 | R12 Wallet connection (owner decision 2026-10-01): connecting an injected wallet (EIP-6963) is allowed **to read the visitor's own address and network only**. Signing is allowed only for visitor-initiated, fee-free actions on their own assets that run entirely in the browser (e.g. revoking token approvals). Never request seed phrases, never move funds, swap, bridge or relay transactions, never take a fee. The UI must state this next to every connect button. | R1, R2, R3 |
-| R11 Until a licensed VN exchange publishes market data, prices come from foreign exchanges' public **USD fiat** pairs (never USDT), aggregated by median. Exchange names appear only as data attribution: no links, logos, referral or "where to buy". The visitor's browser never contacts an exchange. | R3, owner decision 2026-10-01 |
+| R11 Until a licensed VN exchange publishes market data, prices come from foreign exchanges' public **USD fiat** pairs (never USDT), aggregated by median. Exchange names appear only as data attribution: no links, logos, referral or "where to buy". The visitor's browser never contacts an exchange. **Universe (2026-10-01):** discovered daily from the exchanges' public catalogs: only assets listed against USD on ≥ 2 sources; never stablecoins or other fiat-pegged tokens (a "USDT = x ₫" figure is an OTC-style rate, R2), fiat currencies (FX comes only from the bank rate) or gold-backed tokens (gold trading is separately regulated). Assets below $0.001 or whose sources disagree by > 20% (likely different assets sharing a ticker) are not shown. Sorting by 24h change is not offered (R4). | R3, owner decision 2026-10-01 |
 | R9 No Telegram/Zalo bots that relay trading signals. | L7, R4 |
 | R10 Do not issue tokens/NFTs or run airdrops. | L2, L3 |
 
@@ -54,7 +54,9 @@ MoF accepted 5/7 exchange dossiers (03/2026): VIX (VIXEX), Lộc Phát (LPEX), V
 | OFAC SDN digital-currency addresses (ETH list, applied to all EVM chains) | github.com/0xB10C/ofac-sanctioned-digital-currency-addresses | MIT (extraction of public US-government data) | Delistings (e.g. Tornado Cash, 03/2025) disappear from the list automatically |
 | Phishing addresses | github.com/scamsniffer/scam-database | GPL-3.0 | Fetched at runtime, not vendored; 7-day delay; attributed on /rui-ro |
 | EVM state (code, nonce, balance, storage slots) | PublicNode RPC (default, overridable) | Public endpoints | Provider sees queried address, not user IP |
-| Spot prices, 24h change/volume (USD pairs) | Coinbase Exchange, Kraken, Bitstamp, Gemini public market-data APIs | Public, unauthenticated | Server-side only, cached 60s; candles from Coinbase (Kraken fallback), cached 5 min |
+| Asset universe (USD product catalogs) | Coinbase (brokerage market/products), Kraken AssetPairs, Bitstamp trading-pairs-info, Gemini pricefeed | Public, unauthenticated | Worker, once a day; names from the catalogs |
+| Spot prices, 24h change/volume (USD pairs) | Coinbase, Kraken, Bitstamp, Gemini public market-data APIs (one bulk request each) | Public, unauthenticated | Worker every 15s → Redis; web reads only |
+| Candles, realtime tickers | Coinbase Exchange, Kraken (REST + public WebSocket), Bitstamp (REST fallback) | Public, unauthenticated | Go ingestor, within self-imposed rate limits (Coinbase 5/s, Kraken 0.8/s, Bitstamp 2/s); intraday candles only for the top 40 by volume and assets someone is viewing (demand signal stores symbol + time only) |
 | USD/VND rate | Vietcombank public XML feed ("for reference only, 1 request / 5 min") | Public | Cached 30 min. SBV central-rate site rejects automated access (WAF), so it is not scraped |
 
 ## Open questions (ask a fintech lawyer before acting)
@@ -77,6 +79,7 @@ MoF accepted 5/7 exchange dossiers (03/2026): VIX (VIXEX), Lộc Phát (LPEX), V
 
 ## Change log
 
+- 2026-10-01 — Market universe expanded from 14 hand-picked assets to the discovered universe (~300; ~284 shown). Re-checked law first: no exchange licensed yet (7 applications under review), no new instrument affecting reference prices. R11 amended with the universe rules (no stablecoins, fiat or gold tokens; ≥ 2 sources; outlier and precision floors). Candles and realtime moved to a Go ingestor (server-side, same rules).
 - 2026-10-01 — Initial register.
 - 2026-10-01 — Token approvals (/quyen): full-history scan via archive RPC (server-side), current allowances re-read on-chain, revoke = visitor-signed approve(…,0) / setApprovalForAll(…,false) / Permit2 lockdown, exact call shown before signing, zero value, no fee (R12). Browser RPC fallback is a same-origin allow-listed proxy (/api/rpc).
 - 2026-10-01 — Public-wallet watch (/vi) and read-only wallet connection (wagmi, injected/EIP-6963) added under new rule R12. Stablecoin balances are shown as amounts only (no USDT→VND conversion, R2). Privacy policy v0.5.0.

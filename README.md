@@ -14,7 +14,7 @@ Averosi ([averosi.com](https://averosi.com)) là công cụ xem dữ liệu bloc
 | Trung tâm rủi ro (`/rui-ro`): OFAC, ScamSniffer, proxy, EIP-7702 | ✅ hoạt động (Ethereum, Base, BNB Chain) |
 | Chính sách (miễn trừ, điều khoản, quyền riêng tư) | ✅ bản nháp có phiên bản |
 | Tổng quan (`/`): landing page | ✅ |
-| Thị trường (`/thi-truong`, `/tai-san/[mã]`): giá tham khảo VNĐ, biểu đồ nến | ✅ hoạt động (14 tài sản, 4 nguồn USD pháp định) |
+| Thị trường (`/thi-truong`, `/tai-san/[mã]`): giá tham khảo VNĐ, biểu đồ nến | ✅ hoạt động (~300 tài sản tự cập nhật từ 4 nguồn USD pháp định, tìm kiếm/phân trang) |
 | Biểu đồ (`/bieu-do`): biểu đồ kỹ thuật đầy đủ (tradecanvas), chỉ đọc | ✅ |
 | Pháp lý (`/phap-ly`): 7 văn bản, trạng thái hiệu lực, nguồn chính thức | ✅ |
 | Theo dõi ví (`/vi`) + kết nối ví (chỉ đọc địa chỉ) | ✅ |
@@ -31,11 +31,13 @@ pnpm dev            # http://localhost:3000
 pnpm check          # lint + typecheck + test + build
 pnpm test:e2e       # Playwright (cần: pnpm --filter @app/web exec playwright install chromium)
 
-# Chạy đầy đủ với worker dữ liệu (Postgres + Redis qua Docker)
+# Chạy đầy đủ: Postgres + Redis + ingestor Go (giá trực tiếp, nến) qua Docker, worker TS chạy local
 pnpm infra:up
-pnpm worker                         # cửa sổ 1
+pnpm worker                         # cửa sổ 1 (lập danh sách tài sản; ingestor chờ bước này)
 MARKET_BACKEND=store DATABASE_URL=postgres://app:app@localhost:55432/market REDIS_URL=redis://localhost:56379 pnpm dev   # cửa sổ 2
 ```
+
+Triển khai trên một VPS 4 GB: `docker-compose.prod.yml` (Caddy TLS, web, worker, ingestor, Postgres, Redis; tổng giới hạn RAM ~2,4 GB). Image được GitHub Actions build và đẩy lên GHCR sau khi CI xanh. Xem `docker/prod.env.example`.
 
 ## Tài liệu
 
@@ -46,7 +48,7 @@ MARKET_BACKEND=store DATABASE_URL=postgres://app:app@localhost:55432/market REDI
 
 ## Đóng góp
 
-Mọi đóng góp phải tuân thủ các nguyên tắc R1–R10 trong [LEGAL_REGISTER](docs/LEGAL_REGISTER.md). Pull request thêm liên kết giới thiệu sàn, nút giao dịch, lời khuyên đầu tư hay thu thập dữ liệu cá nhân sẽ bị từ chối.
+Mọi đóng góp phải tuân thủ các nguyên tắc R1–R12 trong [LEGAL_REGISTER](docs/LEGAL_REGISTER.md). Pull request thêm liên kết giới thiệu sàn, nút giao dịch, lời khuyên đầu tư hay thu thập dữ liệu cá nhân sẽ bị từ chối.
 
 ## Đổi tên thương hiệu
 

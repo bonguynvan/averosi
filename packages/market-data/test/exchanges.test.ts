@@ -5,50 +5,86 @@ const AT = new Date(0);
 const now = () => AT;
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
 
+const cbProduct = (base: string, price: string, extra: Record<string, unknown> = {}) => ({
+  product_id: `${base}-USD`,
+  base_currency_id: base,
+  quote_currency_id: "USD",
+  status: "online",
+  is_disabled: false,
+  trading_disabled: false,
+  price,
+  price_percentage_change_24h: "2",
+  volume_24h: "3.5",
+  ...extra,
+});
+
 describe("Coinbase", () => {
-  test("maps /stats to quotes with rolling 24h change and volume; skips unsupported products", async () => {
-    const fetchFn = vi.fn(async (url: string | URL | Request) => {
-      const u = String(url);
-      if (u.includes("TRX-USD")) return json({ message: "NotFound" }, 404);
-      return json({ open: "100", last: "102", volume: "3.5" });
-    });
+  test("one bulk products call → quotes with rolling 24h change (percent → bps) and volume", async () => {
+    const fetchFn = vi.fn(async (_url: string | URL | Request) =>
+      json({
+        products: [
+          cbProduct("BTC", "102"),
+          cbProduct("ETH", "3000", { status: "delisted" }),
+          cbProduct("SOL", "150", { trading_disabled: true }),
+          { ...cbProduct("BTC", "99"), product_id: "BTC-EUR", quote_currency_id: "EUR" },
+          cbProduct("ADA", "0.7", { price_percentage_change_24h: "" }),
+        ],
+      }),
+    );
     const src = createCoinbaseSource({ fetchFn, now });
-    const result = await src.quotes(["BTC", "TRX"]);
+    const result = await src.quotes(["BTC", "ETH", "SOL", "ADA", "TRX"]);
     expect(src.name).toBe("Coinbase");
     expect(result.data).toEqual([
       { source: "Coinbase", symbol: "BTC", lastUsdMicros: 102_000_000n, change24hBps: 200, volume24hBaseMicros: 3_500_000n },
+      { source: "Coinbase", symbol: "ADA", lastUsdMicros: 700_000n, volume24hBaseMicros: 3_500_000n },
     ]);
-    expect(String(fetchFn.mock.calls[0]?.[0])).toBe("https://api.exchange.coinbase.com/products/BTC-USD/stats");
+    expect(fetchFn).toHaveBeenCalledTimes(1);
   });
 
-  test("throws when every product fails", async () => {
+  test("HTTP failure throws with the source name", async () => {
     const src = createCoinbaseSource({ fetchFn: async () => json({}, 503), now });
     await expect(src.quotes(["BTC"])).rejects.toThrow("Coinbase");
   });
 });
 
+const KRAKEN_PAIRS = {
+  error: [],
+  result: {
+    XXBTZUSD: { altname: "XBTUSD", wsname: "XBT/USD", status: "online" },
+    XDGUSD: { altname: "XDGUSD", wsname: "XDG/USD", status: "online" },
+    XXBTZEUR: { altname: "XBTEUR", wsname: "XBT/EUR", status: "online" },
+    OLDUSD: { altname: "OLDUSD", wsname: "OLD/USD", status: "delisted" },
+  },
+};
+
 describe("Kraken", () => {
-  test("maps legacy pair keys (XXBTZUSD, XDGUSD) back to symbols; no rolling 24h change", async () => {
-    const fetchFn = vi.fn(async (_url: string | URL | Request) =>
-      json({
-        error: [],
-        result: {
-          XXBTZUSD: { c: ["83519.1", "0.1"], v: ["1", "2.5"] },
-          XDGUSD: { c: ["0.0944247", "1"], v: ["1", "10"] },
-        },
-      }),
+  test("maps symbols through the cached pair catalog and queries only the wanted pairs", async () => {
+    const fetchFn = vi.fn(async (url: string | URL | Request) =>
+      String(url).includes("AssetPairs")
+        ? json(KRAKEN_PAIRS)
+        : json({ error: [], result: { XXBTZUSD: { c: ["83519.1", "0.1"], v: ["1", "2.5"] }, XDGUSD: { c: ["0.0944247", "1"], v: ["1", "10"] } } }),
     );
-    const result = await createKrakenSource({ fetchFn, now }).quotes(["BTC", "DOGE"]);
+    const src = createKrakenSource({ fetchFn, now });
+    const result = await src.quotes(["BTC", "DOGE", "OLD"]);
     expect(result.data).toEqual([
       { source: "Kraken", symbol: "BTC", lastUsdMicros: 83_519_100_000n, volume24hBaseMicros: 2_500_000n },
       { source: "Kraken", symbol: "DOGE", lastUsdMicros: 94_424n, volume24hBaseMicros: 10_000_000n },
     ]);
-    expect(String(fetchFn.mock.calls[0]?.[0])).toBe("https://api.kraken.com/0/public/Ticker?pair=XBTUSD,XDGUSD");
+    expect(String(fetchFn.mock.calls[1]?.[0])).toBe("https://api.kraken.com/0/public/Ticker?pair=XBTUSD,XDGUSD");
+    await src.quotes(["BTC"]);
+    expect(fetchFn.mock.calls.filter(([u]) => String(u).includes("AssetPairs"))).toHaveLength(1);
+  });
+
+  test("no listed symbols → empty result without a ticker call", async () => {
+    const fetchFn = vi.fn(async () => json(KRAKEN_PAIRS));
+    expect((await createKrakenSource({ fetchFn, now }).quotes(["NOPE"])).data).toEqual([]);
+    expect(fetchFn).toHaveBeenCalledTimes(1);
   });
 
   test("API-level errors throw", async () => {
-    const src = createKrakenSource({ fetchFn: async () => json({ error: ["EGeneral:Too many requests"], result: {} }), now });
-    await expect(src.quotes(["BTC"])).rejects.toThrow("Too many requests");
+    const fetchFn = async (url: string | URL | Request) => (String(url).includes("AssetPairs") ? json(KRAKEN_PAIRS) : json({ error: ["EGeneral:Too many requests"], result: {} }));
+    await expect(createKrakenSource({ fetchFn, now }).quotes(["BTC"])).rejects.toThrow("Too many requests");
+    await expect(createKrakenSource({ fetchFn: async () => json({ error: ["EService:Unavailable"] }), now }).quotes(["BTC"])).rejects.toThrow("Unavailable");
   });
 });
 

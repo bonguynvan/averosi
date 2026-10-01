@@ -1,5 +1,5 @@
 import "server-only";
-import { MARKET_ASSETS, type MarketOverview, type Timeframe } from "@app/core";
+import { type MarketOverview, type Timeframe, type UniverseAsset, buildUniverse, parseSymbol } from "@app/core";
 import {
   type CandleResult,
   createBitstampSource,
@@ -7,18 +7,21 @@ import {
   createCoinbaseSource,
   createGeminiSource,
   createKrakenSource,
+  collectListings,
+  createListingSources,
   createVietcombankFx,
 } from "@app/market-data";
 import { z } from "zod";
 import { createRateLimiter } from "../risk/rateLimit";
-import type { IndicatorsResult, MarketBackend } from "./backend";
+import { type IndicatorsResult, type MarketBackend, SEED_UNIVERSE } from "./backend";
 import { createDirectBackend } from "./directBackend";
 import { FIXTURE_CANDLES, FIXTURE_FX, FIXTURE_MARKET_SOURCES } from "./fixtures";
 import type { LiveListener } from "./liveHub";
 import { createStoreBackend } from "./storeBackend";
 
 const FX_TTL_MS = 30 * 60_000;
-const SYMBOLS = MARKET_ASSETS.map((a) => a.symbol);
+/** Same rule as the worker's universe job: listed against USD on at least two exchanges. */
+const UNIVERSE_MIN_SOURCES = 2;
 
 /** Sources shown in the methodology panel; order = display order. */
 export const MARKET_SOURCE_NOTES = [
@@ -43,7 +46,7 @@ function createBackend(): MarketBackend {
     REDIS_URL: process.env.REDIS_URL,
   });
   if (env.DATA_MODE === "fixture") {
-    return createDirectBackend({ sources: FIXTURE_MARKET_SOURCES, fx: FIXTURE_FX, candleSource: FIXTURE_CANDLES, symbols: SYMBOLS });
+    return createDirectBackend({ sources: FIXTURE_MARKET_SOURCES, fx: FIXTURE_FX, candleSource: FIXTURE_CANDLES, universe: async () => SEED_UNIVERSE });
   }
   if (env.MARKET_BACKEND === "store") {
     if (!env.DATABASE_URL || !env.REDIS_URL) throw new Error("MARKET_BACKEND=store requires DATABASE_URL and REDIS_URL");
@@ -53,7 +56,7 @@ function createBackend(): MarketBackend {
     sources: [createCoinbaseSource(), createKrakenSource(), createBitstampSource(), createGeminiSource()],
     fx: createVietcombankFx({ ttlMs: FX_TTL_MS }),
     candleSource: createCandleSource(),
-    symbols: SYMBOLS,
+    universe: async () => buildUniverse((await collectListings(createListingSources())).listings, { minSources: UNIVERSE_MIN_SOURCES }),
   });
 }
 
@@ -62,6 +65,19 @@ let backend: MarketBackend | null = null;
 const current = () => (backend ??= createBackend());
 
 export const marketOverview = (): Promise<MarketOverview> => current().overview();
+export const marketAssets = (): Promise<readonly UniverseAsset[]> => current().assets();
+
+/** Validates a URL/user-supplied ticker and resolves it in the universe (undefined → 404/400). */
+export async function findMarketAsset(input: string): Promise<UniverseAsset | undefined> {
+  const symbol = parseSymbol(input);
+  if (!symbol) return undefined;
+  return (await marketAssets()).find((a) => a.symbol === symbol);
+}
+
+/** Symbol → display name for the whole universe. */
+export async function assetNames(): Promise<ReadonlyMap<string, string>> {
+  return new Map((await marketAssets()).map((a) => [a.symbol, a.name]));
+}
 export const candles = (symbol: string, timeframe: Timeframe): Promise<CandleResult> => current().candles(symbol, timeframe);
 export const indicators = (symbol: string, timeframe: Timeframe): Promise<IndicatorsResult | null> => current().indicators(symbol, timeframe);
 export const subscribeLive = (listener: LiveListener) => current().subscribeLive(listener);

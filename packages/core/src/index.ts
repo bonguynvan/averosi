@@ -14,7 +14,6 @@ export * from "./domain/sparkline";
 export * from "./domain/marketSelect";
 export * from "./domain/candles";
 export * from "./domain/ta";
-export * from "./domain/livePrices";
 export * from "./domain/approvals";
 export * from "./domain/assets";
 export * from "./application/usecases/checkAddressRisk";

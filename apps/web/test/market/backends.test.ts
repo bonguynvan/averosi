@@ -10,6 +10,7 @@ const source: MarketSource = {
   quotes: async (symbols) => sourced(symbols.map((s) => ({ source: "Fake", symbol: s, lastUsdMicros: 2_000_000n })), "Fake", AT),
 };
 const fx: FxSource = { usdVndRate: async () => sourced(25_000n, "FX", AT) };
+const universe = async () => [{ symbol: "BTC", name: "Bitcoin", sources: ["Fake", "Other"], venues: {} }];
 const bars = Array.from({ length: 30 }, (_, i) => ({ time: i * 3600, open: 1, high: 2, low: 0.5, close: 10 + i, volume: 1 }));
 
 afterEach(() => vi.useRealTimers());
@@ -17,7 +18,7 @@ afterEach(() => vi.useRealTimers());
 describe("createDirectBackend", () => {
   test("overview, cached candles and on-demand indicators", async () => {
     const candleSource: CandleSource = { candles: vi.fn(async () => ({ source: "Fake", bars })) };
-    const backend = createDirectBackend({ sources: [source], fx, candleSource, symbols: ["BTC"] });
+    const backend = createDirectBackend({ sources: [source], fx, candleSource, universe });
     expect(backend.kind).toBe("direct");
     expect((await backend.overview()).assets[0]?.priceVnd).toBe(50_000n);
 
@@ -30,14 +31,26 @@ describe("createDirectBackend", () => {
     expect(ind?.snapshot.sma20).toBeCloseTo(29.5, 10);
   });
 
+  test("universe drives the overview; empty or failing discovery falls back to the seed list", async () => {
+    const backend = createDirectBackend({ sources: [source], fx, candleSource: { candles: async () => ({ source: "Fake", bars }) }, universe });
+    expect((await backend.assets()).map((a) => a.symbol)).toEqual(["BTC"]);
+    expect((await backend.overview()).assets.map((a) => a.symbol)).toEqual(["BTC"]);
+
+    const empty = createDirectBackend({ sources: [source], fx, candleSource: { candles: async () => ({ source: "Fake", bars }) }, universe: async () => [] });
+    expect((await empty.assets()).length).toBeGreaterThan(10);
+    const failing = createDirectBackend({ sources: [source], fx, candleSource: { candles: async () => ({ source: "Fake", bars }) }, universe: () => Promise.reject(new Error("catalogs down")) });
+    expect((await failing.assets())[0]?.symbol).toBe("BTC");
+    expect((await failing.overview()).assets.length).toBeGreaterThan(10);
+  });
+
   test("no bars → no indicators", async () => {
-    const backend = createDirectBackend({ sources: [source], fx, candleSource: { candles: async () => ({ source: "Fake", bars: [] }) }, symbols: ["BTC"] });
+    const backend = createDirectBackend({ sources: [source], fx, candleSource: { candles: async () => ({ source: "Fake", bars: [] }) }, universe });
     expect(await backend.indicators("BTC", "1d")).toBeNull();
   });
 
   test("live: pushes overview prices immediately and every 15s while subscribed", async () => {
     vi.useFakeTimers();
-    const backend = createDirectBackend({ sources: [source], fx, candleSource: { candles: async () => ({ source: "Fake", bars }) }, symbols: ["BTC"] });
+    const backend = createDirectBackend({ sources: [source], fx, candleSource: { candles: async () => ({ source: "Fake", bars }) }, universe });
     const received: unknown[] = [];
     const off = await backend.subscribeLive((p) => received.push(p));
     await vi.advanceTimersByTimeAsync(0);
@@ -53,6 +66,8 @@ describe("createDirectBackend", () => {
 
 const storeMocks = vi.hoisted(() => ({
   latest: vi.fn(),
+  active: vi.fn(),
+  markDemand: vi.fn(async (_symbol: string, _at: Date) => undefined),
   getOverview: vi.fn(),
   getIndicators: vi.fn(),
   subscribeLive: vi.fn(async () => async () => undefined),
@@ -63,7 +78,13 @@ vi.mock("server-only", () => ({}));
 vi.mock("@app/store", () => ({
   createSql: storeMocks.createSql,
   createCandleRepo: () => ({ latest: storeMocks.latest }),
-  createMarketCache: () => ({ getOverview: storeMocks.getOverview, getIndicators: storeMocks.getIndicators, subscribeLive: storeMocks.subscribeLive }),
+  createAssetRepo: () => ({ active: storeMocks.active }),
+  createMarketCache: () => ({
+    getOverview: storeMocks.getOverview,
+    getIndicators: storeMocks.getIndicators,
+    subscribeLive: storeMocks.subscribeLive,
+    markDemand: storeMocks.markDemand,
+  }),
 }));
 
 describe("createStoreBackend", async () => {
@@ -91,5 +112,34 @@ describe("createStoreBackend", async () => {
     const off = await backend.subscribeLive(() => undefined);
     expect(storeMocks.subscribeLive).toHaveBeenCalledTimes(1);
     await off();
+  });
+
+  test("assets: stored universe (cached), seed list while empty", async () => {
+    const backend = createStoreBackend({ databaseUrl: "postgres://x", redisUrl: "redis://x" });
+    storeMocks.active.mockResolvedValueOnce([]);
+    expect((await backend.assets()).length).toBeGreaterThan(10);
+
+    const other = createStoreBackend({ databaseUrl: "postgres://x", redisUrl: "redis://x" });
+    storeMocks.active.mockResolvedValue([{ symbol: "ZORA", name: "Zora", sources: ["Coinbase", "Kraken"], venues: {} }]);
+    expect((await other.assets()).map((a) => a.symbol)).toEqual(["ZORA"]);
+    await other.assets();
+    expect(storeMocks.active).toHaveBeenCalledTimes(2); // second call of `other` served from cache
+  });
+
+  test("candle reads signal demand at most once per symbol per 30s", async () => {
+    let now = 1_000_000;
+    const backend = createStoreBackend({ databaseUrl: "postgres://x", redisUrl: "redis://x" }, () => now);
+    storeMocks.latest.mockResolvedValue({ source: "Coinbase", bars });
+    storeMocks.markDemand.mockClear();
+    await backend.candles("SOL", "1m");
+    await backend.candles("SOL", "5m");
+    await backend.candles("ETH", "1m");
+    expect(storeMocks.markDemand.mock.calls.map((c) => c[0])).toEqual(["SOL", "ETH"]);
+    now += 30_000;
+    await backend.candles("SOL", "1m");
+    expect(storeMocks.markDemand).toHaveBeenCalledTimes(3);
+    storeMocks.markDemand.mockRejectedValueOnce(new Error("redis down"));
+    now += 30_000;
+    await expect(backend.candles("SOL", "1m")).resolves.toBeDefined(); // demand failures never break reads
   });
 });

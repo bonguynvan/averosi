@@ -1,4 +1,4 @@
-import type { MarketOverview } from "@app/core";
+import { type MarketOverview, topByVolume } from "@app/core";
 import type { MarketCache, QuoteRepo } from "@app/store";
 
 export interface OverviewJobDeps {
@@ -10,12 +10,17 @@ export interface OverviewJobDeps {
   readonly recordEverySeconds: number;
 }
 
-/** Aggregates all sources, publishes the snapshot to Redis, and samples it into Postgres history. */
-export async function runOverview(deps: OverviewJobDeps): Promise<void> {
+/**
+ * Aggregates all sources, publishes the snapshot and the by-volume rank (the ingestor uses it to pick
+ * which assets get intraday candles) to Redis, and samples the snapshot into Postgres history.
+ */
+export async function runOverview(deps: OverviewJobDeps): Promise<{ assets: number }> {
   const overview = await deps.load();
   const at = deps.now();
   await deps.cache.setOverview(overview, at);
+  if (overview.assets.length > 0) await deps.cache.setRank(topByVolume(overview.assets, overview.assets.length).map((a) => a.symbol));
   if (Math.floor(at.getTime() / 1000) % deps.recordEverySeconds < 15) {
     await deps.quotes.record(overview, new Date(Math.floor(at.getTime() / (deps.recordEverySeconds * 1000)) * deps.recordEverySeconds * 1000));
   }
+  return { assets: overview.assets.length };
 }

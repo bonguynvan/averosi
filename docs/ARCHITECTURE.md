@@ -10,7 +10,7 @@
 |---|---|---|---|
 | Tổng quan ✅ | `/` | Landing (Binance/CMC-style, Vietnamese framing): hero with VND price board + sparklines, headline stats, neutral highlights (volume, absolute move, source deviation, never "top gainers"), tools bento, legal timeline, FAQ. | Market service + `content/phap-ly` |
 | Biểu đồ ✅ | `/bieu-do?ma=` | Full-bleed tradecanvas `ChartWidget`: toolbar, indicators, drawings, chart types, settings, watchlist (fed from `/api/thi-truong`), alerts, replay, share-URL, layouts in localStorage. Read-only (`trading: false`, no depth ladder). Data via a `PollingAdapter` → `/api/nen` (1m/5m/15m/1h/1d, per-timeframe cache). Chrome themed via `--tcw-*` → tokens. | Exchange candles through our proxy |
-| Thị trường ✅ | `/thi-truong`, `/tai-san/[symbol]` | Median reference price of 14 assets from 4 exchanges' USD fiat pairs (Coinbase, Kraken, Bitstamp, Gemini), VND at Vietcombank's USD transfer rate, 24h change, aggregated volume, source health. Detail page: `@tradecanvas/chart` candles via the same-origin proxy `/api/nen/[symbol]`. | Exchange public APIs + Vietcombank feed |
+| Thị trường ✅ | `/thi-truong`, `/tai-san/[symbol]` | Median reference price of the discovered universe (~300 assets listed against USD on ≥ 2 of Coinbase, Kraken, Bitstamp, Gemini; no stablecoins/fiat/gold tokens), VND at Vietcombank's USD transfer rate, 24h change, aggregated volume, source health and a ≠ mark when sources disagree > 3%. Search, sort (volume, ticker, price — never by gains) and 50-row pages via URL params. Detail page: `@tradecanvas/chart` candles via the same-origin proxy `/api/nen/[symbol]`. | Exchange public APIs + Vietcombank feed |
 | Trung tâm rủi ro | `/rui-ro` | Paste an address or contract and get a risk report: sanctions list hit, known-scam lists, token approvals, contract flags (honeypot/proxy/owner mint). Shows the methodology. | Public RPC, OFAC SDN, open scam lists |
 | Quyền token ✅ | `/quyen` | Full-history approval scan: one `eth_getLogs` filter (`Approval`, `ApprovalForAll`, Permit2 `Approval/Permit/Lockdown`, owner topic) via an archive RPC with adaptive windows (provider-limit hints, ceiling, honest "partial"). Current allowances re-read by multicall; only active ones shown, with spender risk. Revoke signed in the visitor's wallet (R12). | `ARCHIVE_RPC_URL_*` (keyed) + regular RPC |
 | Theo dõi ví công khai ✅ | `/vi` | Watchlist (≤20, localStorage, private notes) refreshed every minute via `POST /api/vi`: native balance + VND reference, USDT/USDC amounts (multicall), outgoing tx count with "+N mới", OFAC/phishing flags. "Watch my wallet" from the connected wallet. | Public RPC (server), shared risk lists |
@@ -38,35 +38,35 @@ All three pillars can live inside the product **when their conditions hold**. Ea
 
 ### Never
 
-Custody, signing, swaps, order routing, on/off-ramp, OTC/P2P rates, token issuance, referral links, trading signals, Telegram bots. See LEGAL_REGISTER R1–R10.
+Custody, signing, swaps, order routing, on/off-ramp, OTC/P2P rates, token issuance, referral links, trading signals, Telegram bots. See LEGAL_REGISTER R1–R12.
 
 ## 2. System overview
 
 ```
- Exchanges (REST + public WebSocket)          Vietcombank FX
-        │                                          │
-        ▼                                          ▼
- ┌──────────────────────── apps/worker (server-side only) ───────────────────────┐
- │ overview 15s → median quotes ─┐   candles per timeframe → upsert → indicators  │
- │ WS tickers → LivePriceBook ─┐ │                                                │
- └─────────────────────────────┼─┼────────────────────────────────────────────────┘
-                               │ │                      │
-              Redis pub/sub ◄──┘ └──► Redis (overview, ta:*)   Postgres (candles, asset_quotes, fx_rates)
-                     │                       │                          │
- ┌───────────────────▼───────────────────────▼──────────────────────────▼─────────┐
- │ apps/web (Next.js) — MARKET_BACKEND=store: read-only view of the store         │
+ Exchanges: catalogs + bulk tickers (REST)        Exchanges: candles (REST) + tickers (WebSocket)     Vietcombank FX
+        │                                                         │                                       │
+        ▼                                                         ▼                                       │
+ ┌──── apps/worker (TypeScript) ─────────────────┐   ┌──── services/ingestor (Go) ───────────────────┐   │
+ │ universe daily → assets table                 │   │ WS tickers (all assets) → median → market:live│   │
+ │ overview 15s → market:overview, market:rank ◄─┼───┼─ reads market:rank + market:demand → hot set  │   │
+ │ indicators: drains ta:dirty → ta:{sym}:{tf}  ◄─┼───┼─ candles (rate-limited) → Postgres, ta:dirty  │   │
+ │ retention daily                               │   └────────────────────────────────────────────────┘   │
+ └───────────────────────────────────────────────┘◄──────────────────────────────────────────────────────┘
+                 Postgres (assets, candles, asset_quotes, fx_rates) · Redis (overview, rank, demand, ta:*, market:live)
+                                                        │
+ ┌──────────────────────────────────────────────────────▼─────────────────────────┐
+ │ apps/web (Next.js) — MARKET_BACKEND=store: read-only view of the store          │
+ │  (only write: market:demand = symbol + time when a chart is requested)          │
  │  pages (RSC) · /api/nen · /api/phan-tich · /api/thi-truong · /api/truc-tiep SSE │
- └─────────────────────────────────────┬──────────────────────────────────────────┘
+ └─────────────────────────────────────┬───────────────────────────────────────────┘
                                        │ same-origin only (R11)
                                     Browser
 ```
 
-- **Backends:** `MARKET_BACKEND=direct` (default for dev) makes the web process call exchanges itself with in-process caches, and "live" means the overview polled every 15s. `MARKET_BACKEND=store` (production) only reads what the worker writes. `DATA_MODE=fixture` (e2e) uses the direct backend with deterministic data.
-- **Worker** (`apps/worker`):
-  - overview every 15s, written to Redis, with a per-minute history row in Postgres;
-  - candles 1m/5m/15m/1h/1d on staggered intervals, upserted into Postgres, then the indicator snapshot (SMA/EMA/RSI/MACD/Bollinger/ATR) is written to Redis;
-  - Coinbase + Kraken WebSocket tickers, combined as the per-symbol median of fresh ticks and published to `market:live` at most once per second;
-  - daily retention: 1m 7d, 5m 30d, 15m 90d, 1h 2y, quotes 180d, 1d kept.
+- **Backends:** `MARKET_BACKEND=direct` (default for dev) makes the web process call exchanges itself with in-process caches (universe from the catalogs, cached 6h), and "live" means the overview polled every 15s. `MARKET_BACKEND=store` (production) only reads what the worker and ingestor write. `DATA_MODE=fixture` (e2e) uses the direct backend with the seed list and deterministic data.
+- **Universe:** the worker reads the four exchanges' public USD catalogs once a day and keeps assets listed on ≥ 2 of them, minus stablecoins, fiat and gold tokens (`buildUniverse` in `@app/core`, R11). About 300 assets; the overview hides those below $0.001 (micro-unit precision) or with sources > 20% apart (`aggregateQuotes`). A catalog outage never deactivates assets.
+- **Worker** (`apps/worker`, TypeScript): universe (daily), overview (15s, one bulk request per exchange, plus the by-volume rank for the ingestor), indicators (every 10s for series the ingestor marked dirty, pure TA from `@app/core`), retention (daily: 1m 7d, 5m 30d, 15m 90d, 1h 2y, quotes 180d, 1d kept).
+- **Ingestor** (`services/ingestor`, Go, ~15 MB RAM): Coinbase `ticker_batch` + Kraken v2 `ticker` WebSockets for the whole universe → median of fresh ticks → `market:live` once per second. Candles via REST with per-exchange token buckets (Coinbase → Kraken → Bitstamp fallback): **hot** assets (top 40 by volume + anything viewed in the last 10 min) get all timeframes (1m every 30s … 1d every 30 min), the rest 1h hourly and 1d every 6h. Only changed buckets are written. `GET :8090/healthz` reports feeds and sync counts. Key names are shared with `packages/store/src/cache.ts` (keep in sync).
 - **Web realtime:** one Redis subscription per web process (`liveHub`) is fanned out to SSE clients (`/api/truc-tiep`, heartbeat 20s, ≤4 streams per client). The browser converts USD to VND with the page's Vietcombank rate.
 - **Technical analysis** lives in `@app/core` (pure functions) and is computed server-side (worker, or on demand in direct mode), never in the browser. Values only, no signals (R4).
 - **No personal data** is stored anywhere: the store holds market data only.
@@ -98,8 +98,9 @@ averosi-v2/
 │   │       ├── components/           # by feature: market/, risk/, wallet/, legal/, ui/
 │   │       ├── infrastructure/       # adapters implementing core ports (read-side)
 │   │       └── styles/               # imports design/tokens.css, Tailwind v4 @theme
-│   └── worker/                       # market-data worker (jobs, realtime streams)
-├── packages/market-data/             # exchange/FX/candle adapters + WS tickers (server-only)
+│   └── worker/                       # TS worker: universe, overview, indicators, retention
+├── services/ingestor/                # Go: realtime tickers + candles for the whole universe
+├── packages/market-data/             # exchange catalogs/quotes/FX/candle adapters (server-only)
 ├── packages/store/                   # Postgres (migrations, repos) + Redis (cache, pub/sub)
 ├── tools/legal-watch/                # weekly Perplexity legal scan → GitHub issue
 ├── test/e2e/                         # Playwright
@@ -110,7 +111,7 @@ averosi-v2/
 
 | Area | Choice | Reason |
 |---|---|---|
-| Language | TypeScript strict, ESM | One language end to end; matches quill-v2 |
+| Language | TypeScript strict, ESM; Go for `services/ingestor` | TS end to end for product code; Go where hundreds of concurrent streams/requests must stay cheap on a small VPS |
 | Web | Next.js App Router, RSC, ISR | SEO for Vietnamese content, server rendering of data |
 | Styling | Tailwind v4 with `@theme` mapped to `design/tokens.css` variables | Tokens stay framework-agnostic |
 | Chain access | `viem` (EVM first: Ethereum, Base, BNB Chain); Solana later | Typed, tree-shakable, read-only clients |

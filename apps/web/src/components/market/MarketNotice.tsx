@@ -12,7 +12,15 @@ export function MarketNotice() {
           <li>Quy đổi VNĐ theo tỷ giá USD chuyển khoản do Vietcombank công bố.</li>
           <li>24h = trung vị biến động 24 giờ của các nguồn có số liệu 24 giờ cuộn.</li>
           <li>*KL 24h chỉ cộng khối lượng trên các nguồn tổng hợp, không phải toàn thị trường.</li>
-          <li>Cột Nguồn màu vàng = chỉ có 1 nguồn, độ tin cậy thấp.</li>
+          <li>Cột Nguồn màu vàng = chỉ có 1 nguồn, hoặc các nguồn lệch nhau trên 3% (dấu ≠): độ tin cậy thấp.</li>
+          <li>
+            Danh sách tài sản lấy tự động mỗi ngày từ danh mục công khai của các sàn: chỉ tài sản niêm yết cặp USD pháp định trên ít nhất 2 nguồn.
+            Không gồm stablecoin, tiền pháp định và token bảo chứng vàng.
+          </li>
+          <li>
+            Không hiển thị: tài sản giá dưới 0,001 USD (độ chính xác chưa đủ) và tài sản có các nguồn lệch nhau trên 20% (có thể là các tài sản khác
+            nhau trùng mã).
+          </li>
         </ul>
         <ul className="mt-3 space-y-0.5 border-t border-outline-subtle pt-3 font-mono text-[12px]">
           {MARKET_SOURCE_NOTES.map((s) => (

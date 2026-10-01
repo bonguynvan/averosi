@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { aggregateQuotes, medianBigint, parseDecimalToMicros, usdMicrosToVnd, type SourceQuote } from "../src/domain/market";
+import { MIN_PRICE_USD_MICROS, OUTLIER_BPS, aggregateQuotes, medianBigint, parseDecimalToMicros, usdMicrosToVnd, type SourceQuote } from "../src/domain/market";
 
 const q = (source: string, symbol: string, last: string, extra: Partial<SourceQuote> = {}): SourceQuote => {
   const lastUsdMicros = parseDecimalToMicros(last);
@@ -80,5 +80,21 @@ describe("aggregateQuotes", () => {
     const result = aggregateQuotes(["BTC"], [q("A", "BTC", "0"), q("B", "BTC", "50")]);
     expect(result[0]?.priceUsdMicros).toBe(50_000_000n);
     expect(result[0]?.sources).toEqual(["B"]);
+  });
+
+  test("drops a source that disagrees with the median by more than OUTLIER_BPS (ticker collision)", () => {
+    const result = aggregateQuotes(["ONE"], [q("A", "ONE", "1.00"), q("B", "ONE", "1.02"), q("C", "ONE", "0.99"), q("D", "ONE", "7.50")]);
+    expect(result[0]?.sources).toEqual(["A", "B", "C"]);
+    expect(result[0]?.maxDeviationBps).toBeLessThan(OUTLIER_BPS);
+  });
+
+  test("hides assets priced below MIN_PRICE_USD_MICROS (micro-unit precision too coarse)", () => {
+    expect(aggregateQuotes(["PEPE"], [q("A", "PEPE", "0.000009"), q("B", "PEPE", "0.000009")])).toEqual([]);
+    expect(aggregateQuotes(["X"], [q("A", "X", "0.001"), q("B", "X", "0.001")])[0]?.priceUsdMicros).toBe(MIN_PRICE_USD_MICROS);
+  });
+
+  test("hides an asset whose only two sources disagree badly, rather than guessing", () => {
+    expect(aggregateQuotes(["ONE"], [q("A", "ONE", "1"), q("B", "ONE", "3")])).toEqual([]);
+    expect(aggregateQuotes(["ONE"], [q("A", "ONE", "1"), q("B", "ONE", "1.1")])).toHaveLength(1);
   });
 });

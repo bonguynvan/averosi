@@ -1,0 +1,10 @@
+# TLS (automatic Let's Encrypt) + reverse proxy to the web container.
+{$SITE_HOST} {
+	encode zstd gzip
+	reverse_proxy web:3000 {
+		# Rate limits key on the client IP: always overwrite with the real peer address (no spoofing).
+		header_up X-Forwarded-For {remote_host}
+		# SSE (/api/truc-tiep) must not be buffered.
+		flush_interval -1
+	}
+}

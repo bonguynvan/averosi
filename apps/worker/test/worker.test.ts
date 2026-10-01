@@ -1,10 +1,11 @@
-import type { Bar, MarketOverview, Timeframe } from "@app/core";
-import type { CandleRepo, LivePrice, MarketCache, QuoteRepo, StoredIndicators } from "@app/store";
+import type { Bar, MarketAsset, MarketOverview } from "@app/core";
+import type { ListingSource } from "@app/market-data";
+import type { AssetRepo, CandleRepo, LivePrice, MarketCache, QuoteRepo, StoredIndicators } from "@app/store";
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { runCandleSync } from "../src/jobs/candles";
+import { runIndicators } from "../src/jobs/indicators";
 import { runOverview } from "../src/jobs/overview";
 import { RETENTION, runRetention } from "../src/jobs/retention";
-import { startLivePrices } from "../src/realtime";
+import { runUniverse } from "../src/jobs/universe";
 import { errorMessage, log } from "../src/log";
 import { every } from "../src/scheduler";
 
@@ -12,12 +13,22 @@ const silentLog = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
 
 const overview: MarketOverview = { assets: [], fx: { status: "failed" }, sources: [] };
 
-function fakeCache(): MarketCache & { live: LivePrice[][]; indicators: StoredIndicators[] } {
+function fakeCache(dirty: string[] = []): MarketCache & { live: LivePrice[][]; indicators: StoredIndicators[]; rank: string[][] } {
   const live: LivePrice[][] = [];
   const indicators: StoredIndicators[] = [];
+  const rank: string[][] = [];
   return {
     live,
     indicators,
+    rank,
+    setRank: vi.fn(async (s) => void rank.push([...s])),
+    markDemand: vi.fn(async () => undefined),
+    takeDirty: vi.fn(async (n: number) =>
+      dirty.splice(0, n).map((d) => {
+        const [symbol = "", timeframe = ""] = d.split("|");
+        return { symbol, timeframe };
+      }),
+    ),
     setOverview: vi.fn(async () => undefined),
     getOverview: vi.fn(async () => null),
     setIndicators: vi.fn(async (v) => void indicators.push(v)),
@@ -68,32 +79,78 @@ describe("runOverview", () => {
     expect(quotes.record).not.toHaveBeenCalled();
     await runOverview({ load, cache, quotes, now: () => new Date("2026-10-01T08:01:00Z"), recordEverySeconds: 60 });
     expect(quotes.record).toHaveBeenCalledTimes(1);
+    expect(cache.rank).toEqual([]); // empty overview → rank untouched
+  });
+
+  test("publishes symbols ranked by 24h volume for the ingestor", async () => {
+    const cache = fakeCache();
+    const asset = (symbol: string, volume: bigint) => ({ symbol, volume24hUsdMicros: volume, change24hBps: 0 }) as unknown as MarketAsset;
+    const quotes = { record: vi.fn(async () => undefined) } as unknown as QuoteRepo;
+    const load = async () => ({ ...overview, assets: [asset("ETH", 5n), asset("BTC", 9n), asset("XRP", 1n)] });
+    expect(await runOverview({ load, cache, quotes, now: () => new Date("2026-10-01T08:00:20Z"), recordEverySeconds: 60 })).toEqual({ assets: 3 });
+    expect(cache.rank).toEqual([["BTC", "ETH", "XRP"]]);
   });
 });
 
-describe("runCandleSync", () => {
-  test("upserts each symbol, computes indicators from stored bars, isolates per-symbol failures", async () => {
-    const cache = fakeCache();
-    const stored = new Map<string, Bar[]>();
-    const repo: CandleRepo = {
-      upsert: vi.fn(async (symbol: string, _tf: Timeframe, _src: string, b: readonly Bar[]) => {
-        stored.set(symbol, [...b]);
-        return b.length;
+describe("runUniverse", () => {
+  const source = (name: string, symbols: string[] | Error): ListingSource => ({
+    name,
+    listings: async () => {
+      if (symbols instanceof Error) throw symbols;
+      return symbols.map((symbol) => ({ source: name, symbol, venueId: `${symbol}-${name}` }));
+    },
+  });
+  const repo = (): AssetRepo & { saved: { symbols: string[]; deactivateMissing: boolean }[] } => {
+    const saved: { symbols: string[]; deactivateMissing: boolean }[] = [];
+    return {
+      saved,
+      save: vi.fn(async (u: Parameters<AssetRepo["save"]>[0], opts: Parameters<AssetRepo["save"]>[1]) => {
+        saved.push({ symbols: u.map((a) => a.symbol), deactivateMissing: opts.deactivateMissing });
+        return { upserted: u.length, deactivated: 0 };
       }),
-      latest: vi.fn(async (symbol: string) => ({ source: "Coinbase", bars: stored.get(symbol) ?? [] })),
+      active: vi.fn(async () => []),
+    };
+  };
+
+  test("keeps assets on ≥ minSources exchanges, excludes stablecoins, deactivates only after a clean read", async () => {
+    const r = repo();
+    const result = await runUniverse({ sources: [source("A", ["BTC", "USDT", "ETH"]), source("B", ["BTC", "USDT", "SOL"])], repo: r, minSources: 2 });
+    expect(result).toEqual({ assets: 1, upserted: 1, deactivated: 0, failedCatalogs: [] });
+    expect(r.saved).toEqual([{ symbols: ["BTC"], deactivateMissing: true }]);
+  });
+
+  test("a failed catalog never deactivates; all failed throws", async () => {
+    const r = repo();
+    const result = await runUniverse({ sources: [source("A", ["BTC"]), source("B", ["BTC"]), source("C", new Error("down"))], repo: r, minSources: 2 });
+    expect(result.failedCatalogs).toEqual(["C"]);
+    expect(r.saved[0]?.deactivateMissing).toBe(false);
+    await expect(runUniverse({ sources: [source("C", new Error("down"))], repo: r, minSources: 1 })).rejects.toThrow("all exchange catalogs failed");
+  });
+});
+
+describe("runIndicators", () => {
+  test("recomputes indicators for dirty series from stored bars; isolates failures; skips bad timeframes", async () => {
+    const cache = fakeCache(["BTC|1h", "BAD|1h", "ETH|1h", "BTC|2h", "NONE|1d"]);
+    const repo = {
+      upsert: vi.fn(),
       prune: vi.fn(),
-    };
-    const source = {
-      candles: vi.fn(async (symbol: string) => {
-        if (symbol === "BAD") throw new Error("down");
-        return { source: "Coinbase", bars: bars(30) };
+      latest: vi.fn(async (symbol: string) => {
+        if (symbol === "BAD") throw new Error("db down");
+        return { source: "Coinbase", bars: symbol === "NONE" ? [] : bars(30) };
       }),
-    };
-    const result = await runCandleSync({ symbols: ["BTC", "BAD", "ETH"], timeframe: "1h", source, repo, cache, now: () => new Date(0), log: silentLog, concurrency: 2 });
-    expect(result).toEqual({ ok: 2, failed: ["BAD"] });
-    expect(cache.indicators.map((i) => i.symbol).sort()).toEqual(["BTC", "ETH"]);
+    } as unknown as CandleRepo;
+    const result = await runIndicators({ repo, cache, now: () => new Date(0), log: silentLog, batch: 10 });
+    expect(result).toEqual({ computed: 2, failed: 1 });
+    expect(cache.indicators.map((i) => i.symbol)).toEqual(["BTC", "ETH"]);
     expect(cache.indicators[0]?.snapshot.sma20).toBeCloseTo(119.5, 10);
     expect(cache.indicators[0]?.lastBarTime).toBe(29 * 3600);
+    expect(silentLog.warn).toHaveBeenCalledWith("indicator failed", expect.objectContaining({ symbol: "BAD" }));
+  });
+
+  test("respects the batch size", async () => {
+    const cache = fakeCache(["A|1h", "B|1h", "C|1h"]);
+    const repo = { latest: vi.fn(async () => ({ source: "x", bars: bars(5) })) } as unknown as CandleRepo;
+    expect(await runIndicators({ repo, cache, now: () => new Date(0), log: silentLog, batch: 2 })).toEqual({ computed: 2, failed: 0 });
   });
 });
 
@@ -106,31 +163,6 @@ describe("runRetention", () => {
     expect(repo.prune).toHaveBeenCalledWith("1m", new Date(now.getTime() - RETENTION.candles["1m"]));
     expect(repo.prune).not.toHaveBeenCalledWith("1d", expect.anything()); // daily candles kept
     expect(result.quotes).toBe(5);
-  });
-});
-
-describe("startLivePrices", () => {
-  test("feeds ticks into the book and publishes changed medians on each flush", async () => {
-    vi.useFakeTimers();
-    const cache = fakeCache();
-    const handlers: ((t: { symbol: string; source: string; price: number; at: number }[]) => void)[] = [];
-    const live = startLivePrices({
-      cache,
-      streams: [0, 1].map(() => (onTicks: (t: { symbol: string; source: string; price: number; at: number }[]) => void) => {
-        handlers.push(onTicks);
-        return { stop: vi.fn() };
-      }),
-      flushMs: 1_000,
-      maxTickAgeMs: 60_000,
-      now: () => 1_000,
-    });
-    handlers[0]?.([{ symbol: "BTC", source: "Coinbase", price: 100, at: 900 }]);
-    handlers[1]?.([{ symbol: "BTC", source: "Kraken", price: 102, at: 950 }]);
-    await vi.advanceTimersByTimeAsync(1_000);
-    expect(cache.live).toEqual([[{ symbol: "BTC", priceUsd: 101, sources: 2, at: 950 }]]);
-    await vi.advanceTimersByTimeAsync(1_000);
-    expect(cache.live).toHaveLength(1); // nothing new → nothing published
-    live.stop();
   });
 });
 
@@ -159,16 +191,5 @@ describe("scheduler edge cases", () => {
     job.stop();
     await vi.advanceTimersByTimeAsync(1_000);
     expect(calls).toBe(1);
-  });
-});
-
-describe("runCandleSync edge cases", () => {
-  test("no stored bars → no indicators written", async () => {
-    const cache = fakeCache();
-    const repo = { upsert: vi.fn(async () => 0), latest: vi.fn(async () => ({ source: null, bars: [] })), prune: vi.fn() } as unknown as CandleRepo;
-    const source = { candles: vi.fn(async () => ({ source: "Kraken", bars: [] })) };
-    const result = await runCandleSync({ symbols: ["BTC"], timeframe: "1d", source, repo, cache, now: () => new Date(0), log: silentLog, concurrency: 3 });
-    expect(result).toEqual({ ok: 1, failed: [] });
-    expect(cache.indicators).toEqual([]);
   });
 });

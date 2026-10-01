@@ -1,0 +1,12 @@
+**/node_modules
+**/.next
+**/coverage
+**/test-results
+**/playwright-report
+.git
+.env
+.env.*
+!.env.example
+stitch_averosi_vietnam_crypto_terminal
+stitch_averosi_vietnam_crypto_terminal.zip
+services/ingestor

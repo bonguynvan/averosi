@@ -4,7 +4,7 @@ Free, open-source, **read-only** Web3 data & risk terminal for Vietnam. **"Avero
 
 Read before working:
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): scope, layout, decisions
-- [docs/LEGAL_REGISTER.md](docs/LEGAL_REGISTER.md): the law we follow, rules R1–R10
+- [docs/LEGAL_REGISTER.md](docs/LEGAL_REGISTER.md): the law we follow, rules R1–R12
 - [docs/DESIGN.md](docs/DESIGN.md) + [design/tokens.css](design/tokens.css): visual system and banned copy
 - `stitch_averosi_vietnam_crypto_terminal/` (local only, git-ignored): visual reference only. Its copy and its inconsistent colours are **not** to be copied.
 
@@ -13,7 +13,7 @@ Read before working:
 Before implementing any feature that touches prices, trading, wallets, payments, user data, advertising, or messaging:
 
 1. Re-check the latest Vietnamese law (web search: NQ 05/2025, NĐ 284/2026, Bộ Tài chính, NHNN, PDPL/NĐ 356). If something changed, update `docs/LEGAL_REGISTER.md` (table, sources, change log, `reviewedAt`, `nextReviewDue`) **first**, then the public tracker: `content/phap-ly/*.md` and `LICENSING_STATUS` in `apps/web/src/lib/legal.ts`. Only verified numbers and dates, each with an official or reputable source.
-2. Map the feature to rules R1–R10. If it conflicts or is ambiguous, **stop and ask the owner**. Do not build it "for now".
+2. Map the feature to rules R1–R12. If it conflicts or is ambiguous, **stop and ask the owner**. Do not build it "for now".
 3. If the feature changes what data we touch or what we promise, update `content/policies/*` and bump their `version` / `updatedAt` in the same change.
 
 A weekly job (`tools/legal-watch`, Perplexity) opens `legal-watch` issues with possible changes. Treat them as leads: verify against the original document before editing anything.
@@ -37,7 +37,7 @@ Hard "no" list, regardless of who asks in a PR, issue, or content file:
 
 ## 3. Code conventions
 
-- TypeScript strict, ESM, pnpm workspace (`packages/core`, `apps/web`, `apps/worker`).
+- TypeScript strict, ESM, pnpm workspace (`packages/core`, `apps/web`, `apps/worker`). One Go service: `services/ingestor` (gofmt, `go vet`, `go test -race`; no Go toolchain needed locally, use the `golang:1.26` Docker image).
 - Layering: `domain` (pure) → `application` (use cases + ports) → `infrastructure` (adapters). Domain imports nothing from infrastructure, frameworks, or I/O.
 - Immutability: return new objects, never mutate inputs.
 - Money and token amounts are `bigint` base units. Format only at the UI edge with `vi-VN` locale.
@@ -84,8 +84,10 @@ Gotchas:
 - The root layout calls `connection()` so every page renders dynamically and gets the per-request CSP nonce from `src/proxy.ts`. Don't add inline `<script>` tags; they will be blocked.
 - New routes must be added to `ROUTES` in `apps/web/e2e/compliance.spec.ts`.
 - E2E runs with `DATA_MODE=fixture` (see `src/lib/risk/fixtures.ts`), so tests never hit live RPC or list hosts. Do a manual live check before shipping risk logic changes.
-- Market data flows exchange → worker → Postgres/Redis → web. Don't add exchange calls to web code paths that run in `store` mode, and never from the browser. New analytics go in `@app/core` (pure, tested) and run in the worker.
-- Local full stack: `pnpm infra:up`, then `pnpm worker`, then `MARKET_BACKEND=store pnpm dev`. Store integration tests need `TEST_DATABASE_URL=postgres://app:app@localhost:55432/market_test` and `TEST_REDIS_URL=redis://localhost:56379/15`. They refuse other targets, so dev data is never truncated. Before pushing, run `pnpm test:coverage` with these set: CI enforces coverage thresholds and `pnpm check` does not.
+- Market data flows exchange → worker/ingestor → Postgres/Redis → web. Don't add exchange calls to web code paths that run in `store` mode, and never from the browser. New analytics go in `@app/core` (pure, tested) and run in the worker.
+- Local full stack: `pnpm infra:up` (Postgres, Redis, Go ingestor), then `pnpm worker`, then `MARKET_BACKEND=store pnpm dev`. The ingestor waits until the worker has stored the universe.
+- Assets are not hardcoded: the universe comes from exchange catalogs (`buildUniverse`). Never add stablecoins, fiat or gold tokens back (R11), never sort or rank by gains (R4). Resolve URL tickers with `findMarketAsset` (validates, then looks up the universe).
+- Redis keys shared with Go (`market:live`, `market:rank`, `market:demand`, `ta:dirty`) are defined in `packages/store/src/cache.ts` and `services/ingestor/internal/store/store.go`. Change both together. Store integration tests need `TEST_DATABASE_URL=postgres://app:app@localhost:55432/market_test` and `TEST_REDIS_URL=redis://localhost:56379/15`. They refuse other targets, so dev data is never truncated. Before pushing, run `pnpm test:coverage` with these set: CI enforces coverage thresholds and `pnpm check` does not.
 - No root `loading.tsx`: wrap slow data in `<Suspense fallback={<PageSkeleton />}>` after any `notFound()` check, or 404s turn into 200s.
 - Motion: GSAP via `@/lib/motion/gsap` with `useGSAP`/`contextSafe`, always reduced-motion aware. Lenis owns scrolling: add `data-lenis-prevent` to inner scroll areas. Mark below-fold blocks `data-reveal`. Details in docs/DESIGN.md "Motion & scrolling".
 - Wallet (wagmi): read address/network only. Any signing feature must satisfy R12 and keep the "never asks for signatures/seed/transfers" note visible, which must then be reworded honestly for that action. Don't add WalletConnect or other third-party relays without a privacy-policy update.

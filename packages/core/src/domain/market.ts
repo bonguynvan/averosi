@@ -61,11 +61,7 @@ function aggregateSymbol(symbol: string, quotes: readonly SourceQuote[]): AssetS
   const price = medianBigint(quotes.map((q) => q.lastUsdMicros));
   const changes = quotes.flatMap((q) => (q.change24hBps === undefined ? [] : [q.change24hBps]));
   const volume = quotes.reduce((sum, q) => sum + ((q.volume24hBaseMicros ?? 0n) * q.lastUsdMicros) / MICROS, 0n);
-  const deviation = quotes.reduce((max, q) => {
-    const diff = q.lastUsdMicros > price ? q.lastUsdMicros - price : price - q.lastUsdMicros;
-    const bps = Number((diff * BPS) / price);
-    return bps > max ? bps : max;
-  }, 0);
+  const deviation = quotes.reduce((max, q) => Math.max(max, deviationBps(q.lastUsdMicros, price)), 0);
 
   return {
     symbol,
@@ -77,9 +73,48 @@ function aggregateSymbol(symbol: string, quotes: readonly SourceQuote[]): AssetS
   };
 }
 
+/**
+ * A source further than this from the median is treated as a different asset sharing the ticker
+ * (or a broken feed) and dropped. Fewer than two agreeing sources → the asset is not shown at all.
+ */
+export const OUTLIER_BPS = 2_000;
+
+/**
+ * Prices are micro-units (1e-6 USD). Below $0.001 the rounding error exceeds 0.1% and the VND figure
+ * would be a few dong, so such assets are not shown rather than shown imprecisely.
+ */
+export const MIN_PRICE_USD_MICROS = 1_000n;
+
+function deviationBps(value: bigint, reference: bigint): number {
+  const diff = value > reference ? value - reference : reference - value;
+  return Number((diff * BPS) / reference);
+}
+
+function consistentQuotes(quotes: readonly SourceQuote[]): readonly SourceQuote[] {
+  if (quotes.length < 2) return quotes;
+  const median = medianBigint(quotes.map((q) => q.lastUsdMicros));
+  const kept = quotes.filter((q) => deviationBps(q.lastUsdMicros, median) <= OUTLIER_BPS);
+  return kept.length >= 2 ? kept : [];
+}
+
 export function aggregateQuotes(symbols: readonly string[], quotes: readonly SourceQuote[]): AssetSnapshot[] {
+  const bySymbol = new Map<string, SourceQuote[]>();
+  for (const q of quotes) {
+    if (q.lastUsdMicros >= MIN_PRICE_USD_MICROS) bySymbol.set(q.symbol, [...(bySymbol.get(q.symbol) ?? []), q]);
+  }
   return symbols.flatMap((symbol) => {
-    const forSymbol = quotes.filter((q) => q.symbol === symbol && q.lastUsdMicros > 0n);
+    const forSymbol = consistentQuotes(bySymbol.get(symbol) ?? []);
     return forSymbol.length === 0 ? [] : [aggregateSymbol(symbol, forSymbol)];
   });
+}
+
+/**
+ * Realtime reference price as streamed to browsers (display-grade USD number). Produced by
+ * services/ingestor (median of exchange tickers); the authoritative bigint aggregation is the overview.
+ */
+export interface LivePriceUpdate {
+  readonly symbol: string;
+  readonly priceUsd: number;
+  readonly sources: number;
+  readonly at: number; // unix ms
 }

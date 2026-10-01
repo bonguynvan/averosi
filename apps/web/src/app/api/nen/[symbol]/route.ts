@@ -1,14 +1,14 @@
-import { findAsset, parseTimeframe } from "@app/core";
+import { parseTimeframe } from "@app/core";
 import { candleTtlMs } from "@app/market-data";
 import { type NextRequest, NextResponse } from "next/server";
-import { candleRateLimiter, candles } from "@/lib/market/instance";
+import { candleRateLimiter, candles, findMarketAsset } from "@/lib/market/instance";
 import { clientKeyFromHeaders } from "@/lib/risk/form";
 
 type Params = { params: Promise<{ symbol: string }> };
 
 /** Same-origin candle proxy: the visitor's browser never contacts an exchange (privacy + strict CSP). */
 export async function GET(request: NextRequest, { params }: Params) {
-  const asset = findAsset((await params).symbol);
+  const asset = await findMarketAsset((await params).symbol).catch(() => undefined);
   const timeframe = parseTimeframe(request.nextUrl.searchParams.get("tf") ?? "1h");
   if (!asset || !timeframe) return NextResponse.json({ error: "INVALID_REQUEST" }, { status: 400 });
 

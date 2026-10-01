@@ -1,6 +1,5 @@
 import {
   type MarketAsset,
-  findAsset,
   formatUsdMicros,
   formatVnd,
   formatVndCompact,
@@ -23,7 +22,7 @@ import { Change } from "@/components/market/Change";
 import { LivePricesProvider } from "@/components/market/LivePrices";
 import { BRAND } from "@/lib/brand";
 import { listInstruments } from "@/lib/legal";
-import { marketOverview, sparklineSeries } from "@/lib/market/instance";
+import { assetNames, marketOverview, sparklineSeries } from "@/lib/market/instance";
 
 export const metadata: Metadata = {
   title: { absolute: `${BRAND.name}: giá crypto bằng VNĐ, kiểm tra rủi ro ví, pháp lý tài sản mã hóa Việt Nam` },
@@ -32,11 +31,11 @@ export const metadata: Metadata = {
 const BOARD_ROWS = 6;
 const vnTime = (d: Date) => d.toLocaleTimeString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit" });
 
-function toRow(a: MarketAsset, series: Readonly<Record<string, readonly number[]>>): BoardRow {
+function toRow(a: MarketAsset, series: Readonly<Record<string, readonly number[]>>, names: ReadonlyMap<string, string>): BoardRow {
   const points = series[a.symbol];
   return {
     symbol: a.symbol,
-    name: findAsset(a.symbol)?.name ?? a.symbol,
+    name: names.get(a.symbol) ?? a.symbol,
     priceVnd: a.priceVnd === null ? formatUsdMicros(a.priceUsdMicros) : formatVnd(a.priceVnd),
     change24hBps: a.change24hBps,
     spark: points ? sparklinePath(points, 96, 28) : null,
@@ -44,7 +43,7 @@ function toRow(a: MarketAsset, series: Readonly<Record<string, readonly number[]
 }
 
 async function BoardSection() {
-  const overview = await marketOverview();
+  const [overview, names] = await Promise.all([marketOverview(), assetNames()]);
   const byVolume = topByVolume(overview.assets, BOARD_ROWS);
   const byMove = topByAbsChange(overview.assets, BOARD_ROWS);
   const symbols = [...new Set([...byVolume, ...byMove].map((a) => a.symbol))];
@@ -56,8 +55,8 @@ async function BoardSection() {
       updatedAt={updated ? vnTime(updated) : "—"}
       vndPerUsd={overview.fx.status === "ok" ? Number(overview.fx.rateVnd) : null}
       tabs={[
-        { id: "volume", label: "Khối lượng lớn", rows: byVolume.map((a) => toRow(a, series)) },
-        { id: "move", label: "Biến động mạnh (±)", rows: byMove.map((a) => toRow(a, series)) },
+        { id: "volume", label: "Khối lượng lớn", rows: byVolume.map((a) => toRow(a, series, names)) },
+        { id: "move", label: "Biến động mạnh (±)", rows: byMove.map((a) => toRow(a, series, names)) },
       ]}
     />
   );

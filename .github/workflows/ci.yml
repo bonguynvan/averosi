@@ -51,3 +51,37 @@ jobs:
           name: playwright-report
           path: apps/web/test-results
           retention-days: 7
+
+  ingestor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: services/ingestor
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: market_test
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U app -d market_test" --health-interval 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://app:app@localhost:5432/market_test
+      TEST_REDIS_URL: redis://localhost:6379/15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/ingestor/go.mod
+          cache-dependency-path: services/ingestor/go.sum
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+      - run: go vet ./...
+      - run: go test -race -cover ./...
+      - run: docker build -t ingestor:ci .

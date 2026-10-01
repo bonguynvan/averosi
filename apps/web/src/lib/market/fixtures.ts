@@ -1,4 +1,4 @@
-import { type FxSource, type MarketSource, MARKET_ASSETS, sourced } from "@app/core";
+import { type FxSource, type MarketSource, sourced } from "@app/core";
 import type { CandleSource } from "@app/market-data";
 
 /** Deterministic offline market data for e2e tests (DATA_MODE=fixture). Never enabled by default. */
@@ -46,4 +46,3 @@ export const FIXTURE_CANDLES: CandleSource = {
   }),
 };
 
-export const FIXTURE_SYMBOLS = MARKET_ASSETS.map((a) => a.symbol);

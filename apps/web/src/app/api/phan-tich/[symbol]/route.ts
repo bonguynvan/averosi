@@ -1,13 +1,13 @@
-import { findAsset, parseTimeframe } from "@app/core";
+import { parseTimeframe } from "@app/core";
 import { type NextRequest, NextResponse } from "next/server";
-import { candleRateLimiter, indicators } from "@/lib/market/instance";
+import { candleRateLimiter, findMarketAsset, indicators } from "@/lib/market/instance";
 import { clientKeyFromHeaders } from "@/lib/risk/form";
 
 type Params = { params: Promise<{ symbol: string }> };
 
 /** Latest technical-indicator values for one asset/timeframe. Descriptive values only — no signals (R4). */
 export async function GET(request: NextRequest, { params }: Params) {
-  const asset = findAsset((await params).symbol);
+  const asset = await findMarketAsset((await params).symbol).catch(() => undefined);
   const timeframe = parseTimeframe(request.nextUrl.searchParams.get("tf") ?? "1h");
   if (!asset || !timeframe) return NextResponse.json({ error: "INVALID_REQUEST" }, { status: 400 });
   if (!candleRateLimiter.take(clientKeyFromHeaders(request.headers))) return NextResponse.json({ error: "RATE_LIMITED" }, { status: 429 });
