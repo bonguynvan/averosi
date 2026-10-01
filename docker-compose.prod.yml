@@ -40,7 +40,8 @@ services:
 
   worker:
     <<: *app
-    command: ["apps/worker/node_modules/.bin/tsx", "apps/worker/src/main.ts"]
+    working_dir: /worker
+    command: ["node_modules/.bin/tsx", "src/main.ts"]
     environment:
       DATABASE_URL: postgres://app:${POSTGRES_PASSWORD}@postgres:5432/market
       REDIS_URL: redis://redis:6379/0

@@ -1,4 +1,4 @@
-import { type AssetSnapshot, type SourceQuote, aggregateQuotes, usdMicrosToVnd } from "../../domain/market";
+import { type AssetSnapshot, type SourceQuote, aggregateQuotes, usdNanosToVnd } from "../../domain/market";
 import type { Vnd } from "../../domain/money";
 import type { FxSource, MarketSource } from "../ports";
 import type { SourceStatus } from "./checkAddressRisk";
@@ -42,11 +42,11 @@ export async function getMarketOverview(deps: MarketOverviewDeps, query: { reado
     return r ? { name: s.name, status: "ok", fetchedAt: r.fetchedAt } : { name: s.name, status: "failed" };
   });
 
-  const toVnd = (usdMicros: bigint): Vnd | null => (fx.status === "ok" ? usdMicrosToVnd(usdMicros, fx.rateVnd) : null);
+  const toVnd = (usdNanos: bigint): Vnd | null => (fx.status === "ok" ? usdNanosToVnd(usdNanos, fx.rateVnd) : null);
   const assets = aggregateQuotes(query.symbols, quotes).map((a) => ({
     ...a,
-    priceVnd: toVnd(a.priceUsdMicros),
-    volume24hVnd: toVnd(a.volume24hUsdMicros),
+    priceVnd: toVnd(a.priceUsdNanos),
+    volume24hVnd: toVnd(a.volume24hUsdNanos),
   }));
 
   return { assets, fx, sources };

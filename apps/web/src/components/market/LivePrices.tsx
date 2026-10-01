@@ -1,6 +1,6 @@
 "use client";
 
-import { formatVnd } from "@app/core";
+import { formatVndPrice } from "@app/core";
 import { type ReactNode, createContext, useContext, useEffect, useRef, useState } from "react";
 import { MOTION, gsap, prefersReducedMotion } from "@/lib/motion/gsap";
 
@@ -91,7 +91,8 @@ export function LiveVndPrice({ symbol, initial, vndPerUsd, className }: { symbol
   const quote = useLiveQuote(symbol);
   const el = useRef<HTMLSpanElement>(null);
   const previous = useRef<number | null>(null);
-  const text = quote && vndPerUsd ? formatVnd(BigInt(Math.round(quote.priceUsd * vndPerUsd))) : initial;
+  // nano-dong, so sub-dong prices (PEPE ≈ 0,23 ₫) keep their significant digits.
+  const text = quote && vndPerUsd ? formatVndPrice(BigInt(Math.round(quote.priceUsd * vndPerUsd * 1e9))) : initial;
 
   useEffect(() => {
     if (!quote) return;

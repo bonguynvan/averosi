@@ -18,7 +18,7 @@ export function MarketNotice() {
             Không gồm stablecoin, tiền pháp định và token bảo chứng vàng.
           </li>
           <li>
-            Không hiển thị: tài sản giá dưới 0,001 USD (độ chính xác chưa đủ) và tài sản có các nguồn lệch nhau trên 20% (có thể là các tài sản khác
+            Không hiển thị: tài sản giá dưới 0,000001 USD (độ chính xác chưa đủ) và tài sản có các nguồn lệch nhau trên 20% (có thể là các tài sản khác
             nhau trùng mã).
           </li>
         </ul>

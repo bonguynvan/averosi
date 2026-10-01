@@ -4,12 +4,12 @@
  */
 interface Selectable {
   readonly symbol: string;
-  readonly volume24hUsdMicros: bigint;
+  readonly volume24hUsdNanos: bigint;
   readonly change24hBps: number | null;
 }
 
 export function topByVolume<T extends Selectable>(assets: readonly T[], n: number): T[] {
-  return [...assets].sort((x, y) => (y.volume24hUsdMicros > x.volume24hUsdMicros ? 1 : y.volume24hUsdMicros < x.volume24hUsdMicros ? -1 : 0)).slice(0, n);
+  return [...assets].sort((x, y) => (y.volume24hUsdNanos > x.volume24hUsdNanos ? 1 : y.volume24hUsdNanos < x.volume24hUsdNanos ? -1 : 0)).slice(0, n);
 }
 
 export function topByAbsChange<T extends Selectable>(assets: readonly T[], n: number): T[] {
@@ -21,5 +21,5 @@ export function topByAbsChange<T extends Selectable>(assets: readonly T[], n: nu
 }
 
 export function totalVolume(assets: readonly Selectable[]): bigint {
-  return assets.reduce((sum, x) => sum + x.volume24hUsdMicros, 0n);
+  return assets.reduce((sum, x) => sum + x.volume24hUsdNanos, 0n);
 }

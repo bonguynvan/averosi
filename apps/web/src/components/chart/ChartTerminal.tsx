@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { buildTerminalTheme } from "@/lib/chart/theme";
+import { pricePrecisionFor } from "@/lib/chart/precision";
 import { fetchProxyBars } from "@/lib/chart/proxyBars";
 import { type QuoteDto, toWatchlistUpdates } from "@/lib/chart/watchlist";
 import { CANDLE_TIMEFRAMES } from "@app/core";
@@ -11,6 +12,7 @@ const HISTORY_LIMIT = 300;
 const WATCHLIST_REFRESH_MS = 60_000;
 
 type WatchlistTarget = { setWatchlistEntry(symbol: string, entry: { lastPrice?: number; refPrice?: number }): void };
+type MarketTarget = { getChart(): { setMarket(config: { type: "crypto"; pricePrecision: number }): void } };
 
 /** Feed the widget watchlist from our aggregated reference quotes (one request for all symbols). */
 async function refreshWatchlist(widget: WatchlistTarget): Promise<void> {
@@ -39,7 +41,15 @@ export function ChartTerminal({ symbol, symbols }: ChartTerminalProps) {
   useEffect(() => {
     const el = host.current;
     if (!el) return;
-    let widget: ({ destroy(): void } & WatchlistTarget) | null = null;
+    let widget: ({ destroy(): void } & WatchlistTarget & MarketTarget) | null = null;
+    let precision = -1;
+    // Price line, crosshair and alerts use a fixed precision: follow the symbol's price magnitude.
+    const followPrecision = (price: number | undefined) => {
+      const next = pricePrecisionFor(price ?? 0);
+      if (!widget || next === precision) return;
+      precision = next;
+      widget.getChart().setMarket({ type: "crypto", pricePrecision: next });
+    };
     let disposed = false;
     let watchlistTimer: ReturnType<typeof setInterval> | undefined;
 
@@ -53,7 +63,11 @@ export function ChartTerminal({ symbol, symbols }: ChartTerminalProps) {
         if (disposed) return;
         const adapter = new PollingAdapter({
           name: "ds-proxy",
-          fetchBars: (sym, tf, limit) => fetchProxyBars(fetch, sym, tf, limit),
+          fetchBars: async (sym, tf, limit) => {
+            const bars = await fetchProxyBars(fetch, sym, tf, limit);
+            followPrecision(bars.at(-1)?.close);
+            return bars;
+          },
           intervalMs: POLL_MS,
           pollLimit: 3,
           defaultHistoryLimit: HISTORY_LIMIT,

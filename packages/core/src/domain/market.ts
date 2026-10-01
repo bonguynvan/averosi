@@ -2,27 +2,28 @@ import type { Vnd } from "./money";
 
 /**
  * Market reference prices aggregated from several exchanges' public USD (fiat) pairs.
- * Amounts are micro-units (1e-6) held as bigint — never floats.
+ * Amounts are nano-units (1e-9 USD) held as bigint — never floats. Nano precision keeps sub-cent
+ * assets (SHIB, PEPE, BONK…) exact to ≥ 4 significant digits.
  */
-export const MICROS = 1_000_000n;
+export const NANOS = 1_000_000_000n;
 const BPS = 10_000n;
 
 export interface SourceQuote {
   readonly source: string;
   readonly symbol: string;
-  readonly lastUsdMicros: bigint;
+  readonly lastUsdNanos: bigint;
   /** 24h change in basis points, when the exchange provides a true rolling-24h open. */
   readonly change24hBps?: number;
-  /** Rolling 24h traded volume in base-asset micro-units. */
-  readonly volume24hBaseMicros?: bigint;
+  /** Rolling 24h traded volume in base-asset nano-units. */
+  readonly volume24hBaseNanos?: bigint;
 }
 
 export interface AssetSnapshot {
   readonly symbol: string;
-  readonly priceUsdMicros: bigint;
+  readonly priceUsdNanos: bigint;
   readonly change24hBps: number | null;
   /** Sum over the aggregated sources only — not global market volume. */
-  readonly volume24hUsdMicros: bigint;
+  readonly volume24hUsdNanos: bigint;
   readonly sources: readonly string[];
   /** Largest deviation of a single source from the median, in bps (data-quality signal). */
   readonly maxDeviationBps: number;
@@ -30,10 +31,10 @@ export interface AssetSnapshot {
 
 const DECIMAL = /^\d+(\.\d+)?$/;
 
-export function parseDecimalToMicros(input: string): bigint | null {
+export function parseDecimalToNanos(input: string): bigint | null {
   if (!DECIMAL.test(input)) return null;
   const [whole = "0", fraction = ""] = input.split(".");
-  return BigInt(whole) * MICROS + BigInt(fraction.padEnd(6, "0").slice(0, 6));
+  return BigInt(whole) * NANOS + BigInt(fraction.padEnd(9, "0").slice(0, 9));
 }
 
 export function medianBigint(values: readonly bigint[]): bigint {
@@ -52,22 +53,22 @@ function medianNumber(values: readonly number[]): number | null {
   return sorted.length % 2 === 1 ? upper : Math.round(((sorted[mid - 1] as number) + upper) / 2);
 }
 
-/** USD micro-units × VND-per-USD → whole dong, rounded half up. */
-export function usdMicrosToVnd(usdMicros: bigint, vndPerUsd: Vnd): Vnd {
-  return (usdMicros * vndPerUsd + MICROS / 2n) / MICROS;
+/** USD nano-units × VND-per-USD → whole dong, rounded half up. */
+export function usdNanosToVnd(usdNanos: bigint, vndPerUsd: Vnd): Vnd {
+  return (usdNanos * vndPerUsd + NANOS / 2n) / NANOS;
 }
 
 function aggregateSymbol(symbol: string, quotes: readonly SourceQuote[]): AssetSnapshot {
-  const price = medianBigint(quotes.map((q) => q.lastUsdMicros));
+  const price = medianBigint(quotes.map((q) => q.lastUsdNanos));
   const changes = quotes.flatMap((q) => (q.change24hBps === undefined ? [] : [q.change24hBps]));
-  const volume = quotes.reduce((sum, q) => sum + ((q.volume24hBaseMicros ?? 0n) * q.lastUsdMicros) / MICROS, 0n);
-  const deviation = quotes.reduce((max, q) => Math.max(max, deviationBps(q.lastUsdMicros, price)), 0);
+  const volume = quotes.reduce((sum, q) => sum + ((q.volume24hBaseNanos ?? 0n) * q.lastUsdNanos) / NANOS, 0n);
+  const deviation = quotes.reduce((max, q) => Math.max(max, deviationBps(q.lastUsdNanos, price)), 0);
 
   return {
     symbol,
-    priceUsdMicros: price,
+    priceUsdNanos: price,
     change24hBps: medianNumber(changes),
-    volume24hUsdMicros: volume,
+    volume24hUsdNanos: volume,
     sources: quotes.map((q) => q.source).sort(),
     maxDeviationBps: deviation,
   };
@@ -80,10 +81,10 @@ function aggregateSymbol(symbol: string, quotes: readonly SourceQuote[]): AssetS
 export const OUTLIER_BPS = 2_000;
 
 /**
- * Prices are micro-units (1e-6 USD). Below $0.001 the rounding error exceeds 0.1% and the VND figure
- * would be a few dong, so such assets are not shown rather than shown imprecisely.
+ * Prices are nano-units (1e-9 USD). Below $0.000001 the rounding error exceeds 0.1%, so such assets
+ * are not shown rather than shown imprecisely.
  */
-export const MIN_PRICE_USD_MICROS = 1_000n;
+export const MIN_PRICE_USD_NANOS = 1_000n;
 
 function deviationBps(value: bigint, reference: bigint): number {
   const diff = value > reference ? value - reference : reference - value;
@@ -92,15 +93,15 @@ function deviationBps(value: bigint, reference: bigint): number {
 
 function consistentQuotes(quotes: readonly SourceQuote[]): readonly SourceQuote[] {
   if (quotes.length < 2) return quotes;
-  const median = medianBigint(quotes.map((q) => q.lastUsdMicros));
-  const kept = quotes.filter((q) => deviationBps(q.lastUsdMicros, median) <= OUTLIER_BPS);
+  const median = medianBigint(quotes.map((q) => q.lastUsdNanos));
+  const kept = quotes.filter((q) => deviationBps(q.lastUsdNanos, median) <= OUTLIER_BPS);
   return kept.length >= 2 ? kept : [];
 }
 
 export function aggregateQuotes(symbols: readonly string[], quotes: readonly SourceQuote[]): AssetSnapshot[] {
   const bySymbol = new Map<string, SourceQuote[]>();
   for (const q of quotes) {
-    if (q.lastUsdMicros >= MIN_PRICE_USD_MICROS) bySymbol.set(q.symbol, [...(bySymbol.get(q.symbol) ?? []), q]);
+    if (q.lastUsdNanos >= MIN_PRICE_USD_NANOS) bySymbol.set(q.symbol, [...(bySymbol.get(q.symbol) ?? []), q]);
   }
   return symbols.flatMap((symbol) => {
     const forSymbol = consistentQuotes(bySymbol.get(symbol) ?? []);

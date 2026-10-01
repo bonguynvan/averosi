@@ -25,7 +25,7 @@ export interface MarketBackend {
   subscribeLive(listener: LiveListener): Promise<() => Promise<void>>;
 }
 
-export const MICROS = 1_000_000;
+export const NANOS = 1_000_000_000;
 
 export const EMPTY_OVERVIEW: MarketOverview = { assets: [], fx: { status: "failed" }, sources: [] };
 

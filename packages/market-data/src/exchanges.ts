@@ -1,4 +1,4 @@
-import { type MarketSource, type SourceQuote, parseDecimalToMicros, sourced } from "@app/core";
+import { type MarketSource, type SourceQuote, parseDecimalToNanos, sourced } from "@app/core";
 import { z } from "zod";
 import { changeBps, fetchJson } from "./http";
 import { COINBASE_PRODUCTS_URL, CoinbaseProducts, KRAKEN_ASSET_PAIRS_URL, KrakenAssetPairs, isLiveCoinbaseUsd, krakenUsdPairs } from "./listings";
@@ -18,16 +18,16 @@ const KRAKEN_PAIRS_TTL_MS = 6 * 3_600_000;
 const BULK_TIMEOUT_MS = 15_000;
 
 function quote(source: string, symbol: string, last: string, extra: { change?: number | undefined; volume?: string | undefined }): SourceQuote[] {
-  const lastUsdMicros = parseDecimalToMicros(last);
-  if (lastUsdMicros === null || lastUsdMicros === 0n) return [];
-  const volume = extra.volume === undefined ? null : parseDecimalToMicros(extra.volume);
+  const lastUsdNanos = parseDecimalToNanos(last);
+  if (lastUsdNanos === null || lastUsdNanos === 0n) return [];
+  const volume = extra.volume === undefined ? null : parseDecimalToNanos(extra.volume);
   return [
     {
       source,
       symbol,
-      lastUsdMicros,
+      lastUsdNanos,
       ...(extra.change === undefined ? {} : { change24hBps: extra.change }),
-      ...(volume === null ? {} : { volume24hBaseMicros: volume }),
+      ...(volume === null ? {} : { volume24hBaseNanos: volume }),
     },
   ];
 }

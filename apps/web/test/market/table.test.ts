@@ -4,9 +4,9 @@ import { MARKET_SORTS, fold, marketHref, parseMarketQuery, selectMarketPage } fr
 
 const asset = (symbol: string, price: bigint, volume: bigint): MarketAsset => ({
   symbol,
-  priceUsdMicros: price,
+  priceUsdNanos: price,
   change24hBps: 0,
-  volume24hUsdMicros: volume,
+  volume24hUsdNanos: volume,
   sources: ["A", "B"],
   maxDeviationBps: 0,
   priceVnd: null,

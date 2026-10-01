@@ -1,4 +1,4 @@
-import { type AssetInfo, formatUsdMicros, formatVnd, formatVndCompact } from "@app/core";
+import { type AssetInfo, formatUsdNanos, formatVndCompact, formatVndFromUsd } from "@app/core";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -63,10 +63,10 @@ async function AssetContent({ asset }: { asset: AssetInfo }) {
             <dl className="grid grid-cols-[auto_auto] gap-x-4 gap-y-0.5 text-right font-mono text-[13px]" data-testid="asset-price">
               <dt className="text-left text-text-muted">VNĐ</dt>
               <dd className="text-[18px] font-semibold text-accent-soft">
-                {snapshot.priceVnd === null ? "—" : <LiveVndPrice symbol={asset.symbol} initial={formatVnd(snapshot.priceVnd)} vndPerUsd={vndPerUsd} />}
+                {snapshot.priceVnd === null || vndPerUsd === null ? "—" : <LiveVndPrice symbol={asset.symbol} initial={formatVndFromUsd(snapshot.priceUsdNanos, BigInt(vndPerUsd))} vndPerUsd={vndPerUsd} />}
               </dd>
               <dt className="text-left text-text-muted">USD</dt>
-              <dd>{formatUsdMicros(snapshot.priceUsdMicros)}</dd>
+              <dd>{formatUsdNanos(snapshot.priceUsdNanos)}</dd>
               <dt className="text-left text-text-muted">24h</dt>
               <dd>
                 <Change bps={snapshot.change24hBps} />

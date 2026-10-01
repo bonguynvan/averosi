@@ -15,9 +15,9 @@ function fixtureSource(name: string, skew: number): MarketSource {
           return {
             source: name,
             symbol,
-            lastUsdMicros: BigInt(Math.round(usd * 1_000_000)),
+            lastUsdNanos: BigInt(Math.round(usd * 1_000_000_000)),
             change24hBps: symbol === "ETH" ? -120 : 85,
-            volume24hBaseMicros: 1_000_000_000n,
+            volume24hBaseNanos: 1_000_000_000_000n,
           };
         }),
         name,

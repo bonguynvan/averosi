@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { marketOverview } from "@/lib/market/instance";
 
-const MICROS = 1_000_000;
+const NANOS = 1_000_000_000;
 
 /** Compact reference quotes (USD) for client widgets such as the chart watchlist. Same data as /thi-truong. */
 export async function GET() {
@@ -9,7 +9,7 @@ export async function GET() {
     const overview = await marketOverview();
     const quotes = overview.assets.map((a) => ({
       symbol: a.symbol,
-      priceUsd: Number(a.priceUsdMicros) / MICROS,
+      priceUsd: Number(a.priceUsdNanos) / NANOS,
       change24hBps: a.change24hBps,
     }));
     const vndPerUsd = overview.fx.status === "ok" ? Number(overview.fx.rateVnd) : null;

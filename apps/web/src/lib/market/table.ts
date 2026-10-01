@@ -39,9 +39,9 @@ export function fold(text: string): string {
 const compareBigintDesc = (a: bigint, b: bigint) => (a > b ? -1 : a < b ? 1 : 0);
 
 const SORTERS: Record<MarketSort, (a: MarketAsset, b: MarketAsset) => number> = {
-  "khoi-luong": (a, b) => compareBigintDesc(a.volume24hUsdMicros, b.volume24hUsdMicros) || a.symbol.localeCompare(b.symbol),
+  "khoi-luong": (a, b) => compareBigintDesc(a.volume24hUsdNanos, b.volume24hUsdNanos) || a.symbol.localeCompare(b.symbol),
   ma: (a, b) => a.symbol.localeCompare(b.symbol),
-  gia: (a, b) => compareBigintDesc(a.priceUsdMicros, b.priceUsdMicros) || a.symbol.localeCompare(b.symbol),
+  gia: (a, b) => compareBigintDesc(a.priceUsdNanos, b.priceUsdNanos) || a.symbol.localeCompare(b.symbol),
 };
 
 export interface MarketPage {

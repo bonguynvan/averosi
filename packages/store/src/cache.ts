@@ -9,7 +9,8 @@ import { decode, encode } from "./codec";
  * - taDirty: set of "SYMBOL|TF" whose candles changed (ingestor → worker: recompute indicators).
  */
 export const KEYS = {
-  overview: "market:overview",
+  // v2: amounts in nano-units. Bump the version whenever the encoded shape changes.
+  overview: "market:overview:v2",
   indicators: (symbol: string, tf: Timeframe) => `ta:${symbol}:${tf}`,
   liveChannel: "market:live",
   rank: "market:rank",

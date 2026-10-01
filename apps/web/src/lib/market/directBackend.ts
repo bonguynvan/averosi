@@ -1,6 +1,6 @@
 import { type FxSource, type MarketSource, type Timeframe, type UniverseAsset, getMarketOverview, indicatorSnapshot } from "@app/core";
 import { type CandleSource, candleTtlMs, createTtlCache } from "@app/market-data";
-import { MICROS, type MarketBackend, SEED_UNIVERSE } from "./backend";
+import { NANOS, type MarketBackend, SEED_UNIVERSE } from "./backend";
 import { createLiveHub } from "./liveHub";
 
 const OVERVIEW_TTL_MS = 60_000;
@@ -47,7 +47,7 @@ export function createDirectBackend(deps: DirectDeps): MarketBackend {
   const hub = createLiveHub(async (emit) => {
     const push = async () => {
       const { assets } = await backend.overview();
-      emit(assets.map((a) => ({ symbol: a.symbol, priceUsd: Number(a.priceUsdMicros) / MICROS, sources: a.sources.length, at: Date.now() })));
+      emit(assets.map((a) => ({ symbol: a.symbol, priceUsd: Number(a.priceUsdNanos) / NANOS, sources: a.sources.length, at: Date.now() })));
     };
     void push().catch(() => undefined);
     const timer = setInterval(() => void push().catch(() => undefined), LIVE_POLL_MS);

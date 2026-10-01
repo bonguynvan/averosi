@@ -1,13 +1,14 @@
 import {
   type MarketAsset,
-  formatUsdMicros,
+  formatUsdNanos,
   formatVnd,
   formatVndCompact,
+  formatVndFromUsd,
   sparklinePath,
   topByAbsChange,
   topByVolume,
   totalVolume,
-  usdMicrosToVnd,
+  usdNanosToVnd,
 } from "@app/core";
 import type { Metadata } from "next";
 import { Suspense } from "react";
@@ -31,12 +32,18 @@ export const metadata: Metadata = {
 const BOARD_ROWS = 6;
 const vnTime = (d: Date) => d.toLocaleTimeString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit" });
 
-function toRow(a: MarketAsset, series: Readonly<Record<string, readonly number[]>>, names: ReadonlyMap<string, string>): BoardRow {
+interface RowContext {
+  readonly series: Readonly<Record<string, readonly number[]>>;
+  readonly names: ReadonlyMap<string, string>;
+  readonly rateVnd: bigint | null;
+}
+
+function toRow(a: MarketAsset, { series, names, rateVnd }: RowContext): BoardRow {
   const points = series[a.symbol];
   return {
     symbol: a.symbol,
     name: names.get(a.symbol) ?? a.symbol,
-    priceVnd: a.priceVnd === null ? formatUsdMicros(a.priceUsdMicros) : formatVnd(a.priceVnd),
+    priceVnd: rateVnd === null ? formatUsdNanos(a.priceUsdNanos) : formatVndFromUsd(a.priceUsdNanos, rateVnd),
     change24hBps: a.change24hBps,
     spark: points ? sparklinePath(points, 96, 28) : null,
   };
@@ -49,14 +56,15 @@ async function BoardSection() {
   const symbols = [...new Set([...byVolume, ...byMove].map((a) => a.symbol))];
   const series = await sparklineSeries(symbols);
   const updated = overview.sources.flatMap((s) => (s.fetchedAt ? [s.fetchedAt] : []))[0];
+  const context: RowContext = { series, names, rateVnd: overview.fx.status === "ok" ? overview.fx.rateVnd : null };
 
   return (
     <PriceBoard
       updatedAt={updated ? vnTime(updated) : "—"}
       vndPerUsd={overview.fx.status === "ok" ? Number(overview.fx.rateVnd) : null}
       tabs={[
-        { id: "volume", label: "Khối lượng lớn", rows: byVolume.map((a) => toRow(a, series, names)) },
-        { id: "move", label: "Biến động mạnh (±)", rows: byMove.map((a) => toRow(a, series, names)) },
+        { id: "volume", label: "Khối lượng lớn", rows: byVolume.map((a) => toRow(a, context)) },
+        { id: "move", label: "Biến động mạnh (±)", rows: byMove.map((a) => toRow(a, context)) },
       ]}
     />
   );
@@ -69,7 +77,7 @@ async function MarketSections() {
   const eth = assets.find((a) => a.symbol === "ETH");
   const volumeUsd = totalVolume(assets);
   const okSources = sources.filter((s) => s.status === "ok").length;
-  const toVnd = (usdMicros: bigint) => (fx.status === "ok" ? formatVndCompact(usdMicrosToVnd(usdMicros, fx.rateVnd)) : formatUsdMicros(usdMicros));
+  const toVnd = (usdNanos: bigint) => (fx.status === "ok" ? formatVndCompact(usdNanosToVnd(usdNanos, fx.rateVnd)) : formatUsdNanos(usdNanos));
 
   const priceStat = (label: string, a: MarketAsset | undefined): Stat => ({
     label,
@@ -101,7 +109,7 @@ async function MarketSections() {
           {
             title: "Khối lượng 24h lớn nhất",
             caption: "Cộng trên các nguồn tổng hợp",
-            rows: topByVolume(assets, 3).map((a) => ({ symbol: a.symbol, primary: toVnd(a.volume24hUsdMicros) })),
+            rows: topByVolume(assets, 3).map((a) => ({ symbol: a.symbol, primary: toVnd(a.volume24hUsdNanos) })),
           },
           {
             title: "Biến động 24h mạnh nhất",

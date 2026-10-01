@@ -2,8 +2,11 @@ import type { IndicatorSnapshot } from "@app/core";
 import type { IndicatorsResult } from "@/lib/market/backend";
 import { Panel } from "../ui/Panel";
 
+/** Below 1, four significant digits (sub-cent assets: 0,000004343); otherwise `digits` decimals. */
 const num = (v: number | null | undefined, digits = 2) =>
-  v === null || v === undefined || !Number.isFinite(v) ? "—" : v.toLocaleString("vi-VN", { maximumFractionDigits: Math.abs(v) < 1 ? 6 : digits, minimumFractionDigits: 0 });
+  v === null || v === undefined || !Number.isFinite(v)
+    ? "—"
+    : v.toLocaleString("vi-VN", Math.abs(v) < 1 && v !== 0 ? { maximumSignificantDigits: 4 } : { maximumFractionDigits: digits, minimumFractionDigits: 0 });
 
 type Row = { label: string; hint: string; value: (s: IndicatorSnapshot) => string };
 

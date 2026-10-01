@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { topByAbsChange, topByVolume, totalVolume } from "../src/domain/marketSelect";
 
-const a = (symbol: string, vol: bigint, change: number | null) => ({ symbol, volume24hUsdMicros: vol, change24hBps: change });
+const a = (symbol: string, vol: bigint, change: number | null) => ({ symbol, volume24hUsdNanos: vol, change24hBps: change });
 
 describe("market selections (neutral: no 'top gainers')", () => {
   const assets = [a("BTC", 900n, 50), a("ETH", 500n, -300), a("SOL", 700n, 120), a("XRP", 100n, null)];

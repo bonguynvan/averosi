@@ -7,7 +7,7 @@ import { createDirectBackend } from "@/lib/market/directBackend";
 const AT = new Date("2026-10-01T08:00:00Z");
 const source: MarketSource = {
   name: "Fake",
-  quotes: async (symbols) => sourced(symbols.map((s) => ({ source: "Fake", symbol: s, lastUsdMicros: 2_000_000n })), "Fake", AT),
+  quotes: async (symbols) => sourced(symbols.map((s) => ({ source: "Fake", symbol: s, lastUsdNanos: 2_000_000_000n })), "Fake", AT),
 };
 const fx: FxSource = { usdVndRate: async () => sourced(25_000n, "FX", AT) };
 const universe = async () => [{ symbol: "BTC", name: "Bitcoin", sources: ["Fake", "Other"], venues: {} }];

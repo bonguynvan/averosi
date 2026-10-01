@@ -35,8 +35,8 @@ describe("Coinbase", () => {
     const result = await src.quotes(["BTC", "ETH", "SOL", "ADA", "TRX"]);
     expect(src.name).toBe("Coinbase");
     expect(result.data).toEqual([
-      { source: "Coinbase", symbol: "BTC", lastUsdMicros: 102_000_000n, change24hBps: 200, volume24hBaseMicros: 3_500_000n },
-      { source: "Coinbase", symbol: "ADA", lastUsdMicros: 700_000n, volume24hBaseMicros: 3_500_000n },
+      { source: "Coinbase", symbol: "BTC", lastUsdNanos: 102_000_000_000n, change24hBps: 200, volume24hBaseNanos: 3_500_000_000n },
+      { source: "Coinbase", symbol: "ADA", lastUsdNanos: 700_000_000n, volume24hBaseNanos: 3_500_000_000n },
     ]);
     expect(fetchFn).toHaveBeenCalledTimes(1);
   });
@@ -67,8 +67,8 @@ describe("Kraken", () => {
     const src = createKrakenSource({ fetchFn, now });
     const result = await src.quotes(["BTC", "DOGE", "OLD"]);
     expect(result.data).toEqual([
-      { source: "Kraken", symbol: "BTC", lastUsdMicros: 83_519_100_000n, volume24hBaseMicros: 2_500_000n },
-      { source: "Kraken", symbol: "DOGE", lastUsdMicros: 94_424n, volume24hBaseMicros: 10_000_000n },
+      { source: "Kraken", symbol: "BTC", lastUsdNanos: 83_519_100_000_000n, volume24hBaseNanos: 2_500_000_000n },
+      { source: "Kraken", symbol: "DOGE", lastUsdNanos: 94_424_700n, volume24hBaseNanos: 10_000_000_000n },
     ]);
     expect(String(fetchFn.mock.calls[1]?.[0])).toBe("https://api.kraken.com/0/public/Ticker?pair=XBTUSD,XDGUSD");
     await src.quotes(["BTC"]);
@@ -97,7 +97,7 @@ describe("Bitstamp", () => {
         { pair: "ETH/USD", last: "bad", open_24: "1", volume: "1" },
       ]);
     const result = await createBitstampSource({ fetchFn, now }).quotes(["BTC", "ETH"]);
-    expect(result.data).toEqual([{ source: "Bitstamp", symbol: "BTC", lastUsdMicros: 101_000_000n, change24hBps: 100, volume24hBaseMicros: 2_000_000n }]);
+    expect(result.data).toEqual([{ source: "Bitstamp", symbol: "BTC", lastUsdNanos: 101_000_000_000n, change24hBps: 100, volume24hBaseNanos: 2_000_000_000n }]);
   });
 });
 
@@ -111,8 +111,8 @@ describe("Gemini", () => {
       ]);
     const result = await createGeminiSource({ fetchFn, now }).quotes(["BTC", "TRX", "ADA"]);
     expect(result.data).toEqual([
-      { source: "Gemini", symbol: "BTC", lastUsdMicros: 83_522_730_000n, change24hBps: 61 },
-      { source: "Gemini", symbol: "TRX", lastUsdMicros: 337_866n, change24hBps: -14 },
+      { source: "Gemini", symbol: "BTC", lastUsdNanos: 83_522_730_000_000n, change24hBps: 61 },
+      { source: "Gemini", symbol: "TRX", lastUsdNanos: 337_866_000n, change24hBps: -14 },
     ]);
   });
 

@@ -9,7 +9,7 @@ const source = (name: string, prices: Record<string, string>): MarketSource => (
   name,
   quotes: async (symbols) =>
     sourced(
-      symbols.filter((s) => prices[s]).map((s) => ({ source: name, symbol: s, lastUsdMicros: BigInt(prices[s] ?? "0") * 1_000_000n })),
+      symbols.filter((s) => prices[s]).map((s) => ({ source: name, symbol: s, lastUsdNanos: BigInt(prices[s] ?? "0") * 1_000_000_000n })),
       name,
       AT,
     ),
@@ -30,7 +30,7 @@ describe("getMarketOverview", () => {
     );
     expect(overview.fx).toEqual({ status: "ok", rateVnd: 25_000n, source: "Vietcombank", fetchedAt: AT });
     expect(overview.assets).toEqual([
-      expect.objectContaining({ symbol: "BTC", priceUsdMicros: 101_000_000n, priceVnd: 2_525_000n, sources: ["A", "B"] }),
+      expect.objectContaining({ symbol: "BTC", priceUsdNanos: 101_000_000_000n, priceVnd: 2_525_000n, sources: ["A", "B"] }),
     ]);
     expect(overview.sources).toEqual([
       { name: "A", status: "ok", fetchedAt: AT },

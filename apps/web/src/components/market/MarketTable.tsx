@@ -1,4 +1,4 @@
-import { type MarketAsset, formatUsdMicros, formatVnd, formatVndCompact } from "@app/core";
+import { type MarketAsset, formatUsdNanos, formatVndCompact, formatVndFromUsd } from "@app/core";
 import Link from "next/link";
 import { Change } from "./Change";
 import { LiveVndPrice } from "./LivePrices";
@@ -42,9 +42,9 @@ export function MarketTable({ assets, names, vndPerUsd, firstRank = 1 }: MarketT
               </Link>
             </th>
             <td className="py-2 pr-3 text-right text-accent-soft">
-              {a.priceVnd === null ? "—" : <LiveVndPrice symbol={a.symbol} initial={formatVnd(a.priceVnd)} vndPerUsd={vndPerUsd} />}
+              {a.priceVnd === null || vndPerUsd === null ? "—" : <LiveVndPrice symbol={a.symbol} initial={formatVndFromUsd(a.priceUsdNanos, BigInt(vndPerUsd))} vndPerUsd={vndPerUsd} />}
             </td>
-            <td className="hidden py-2 pr-3 text-right text-text-muted md:table-cell">{formatUsdMicros(a.priceUsdMicros)}</td>
+            <td className="hidden py-2 pr-3 text-right text-text-muted md:table-cell">{formatUsdNanos(a.priceUsdNanos)}</td>
             <td className="py-2 pr-3 text-right">
               <Change bps={a.change24hBps} />
             </td>

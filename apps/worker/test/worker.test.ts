@@ -84,7 +84,7 @@ describe("runOverview", () => {
 
   test("publishes symbols ranked by 24h volume for the ingestor", async () => {
     const cache = fakeCache();
-    const asset = (symbol: string, volume: bigint) => ({ symbol, volume24hUsdMicros: volume, change24hBps: 0 }) as unknown as MarketAsset;
+    const asset = (symbol: string, volume: bigint) => ({ symbol, volume24hUsdNanos: volume, change24hBps: 0 }) as unknown as MarketAsset;
     const quotes = { record: vi.fn(async () => undefined) } as unknown as QuoteRepo;
     const load = async () => ({ ...overview, assets: [asset("ETH", 5n), asset("BTC", 9n), asset("XRP", 1n)] });
     expect(await runOverview({ load, cache, quotes, now: () => new Date("2026-10-01T08:00:20Z"), recordEverySeconds: 60 })).toEqual({ assets: 3 });

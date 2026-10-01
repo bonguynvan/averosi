@@ -20,9 +20,9 @@ const OVERVIEW: MarketOverview = {
   assets: [
     {
       symbol: "BTC",
-      priceUsdMicros: 83_500_000_000n,
+      priceUsdNanos: 83_500_000_000_000n,
       change24hBps: 85,
-      volume24hUsdMicros: 1_000_000_000n,
+      volume24hUsdNanos: 1_000_000_000_000n,
       sources: ["Coinbase", "Kraken"],
       maxDeviationBps: 4,
       priceVnd: 2_152_630_000n,
@@ -92,7 +92,7 @@ describe.skipIf(!DB_URL)("postgres repositories", () => {
     await repo.record(OVERVIEW, new Date("2026-10-01T08:00:00Z"));
     await repo.record(OVERVIEW, new Date("2026-10-01T08:00:00Z")); // duplicate ignored
     const history = await repo.history("BTC", new Date("2026-09-30T00:00:00Z"));
-    expect(history).toEqual([{ takenAt: new Date("2026-10-01T08:00:00Z"), priceUsdMicros: 83_500_000_000n }]);
+    expect(history).toEqual([{ takenAt: new Date("2026-10-01T08:00:00Z"), priceUsdNanos: 83_500_000_000_000n }]);
     const [fx] = await sql<{ vnd_per_usd: string }[]>`SELECT vnd_per_usd FROM fx_rates`;
     expect(fx?.vnd_per_usd).toBe("25780");
     expect(await repo.prune(new Date("2027-01-01T00:00:00Z"))).toBe(1);
