@@ -14,7 +14,7 @@ export function LegalBar() {
     >
       <span className="shrink-0 font-bold text-danger">⚠ PHÁP LÝ:</span>
       <p className="min-w-0 flex-1">
-        <span className="md:hidden">Không phải sàn giao dịch, không phải lời khuyên đầu tư.</span>
+        <span className="md:hidden">Không phải sàn, không tư vấn đầu tư.</span>
         <span className="hidden md:inline">
           {BRAND.name} là công cụ mã nguồn mở, miễn phí, chỉ hiển thị dữ liệu công khai. Không phải sàn giao dịch, không lưu ký,
           không được cấp phép và không phải lời khuyên đầu tư.

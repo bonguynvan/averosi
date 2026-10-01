@@ -5,8 +5,10 @@ test.describe("desktop shell", () => {
 
   test("legal bar, sidebar and table header stay pinned while the page scrolls", async ({ page }) => {
     await page.goto("/");
-    const shellTop = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ds-shell-top")));
-    expect(shellTop).toBeGreaterThan(50);
+    const readShellTop = () => page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ds-shell-top")) || 0);
+    // Published by ShellMetrics after hydration.
+    await expect.poll(readShellTop).toBeGreaterThan(50);
+    const shellTop = await readShellTop();
 
     // Scroll part-way: at the very bottom the footer legitimately pushes the sticky sidebar up.
     await page.mouse.wheel(0, 400);
@@ -56,6 +58,7 @@ test.describe("mobile", () => {
 
   test("legal bar is compact but never truncated; nav keeps the active item in view", async ({ page }) => {
     await page.goto("/kien-thuc");
+    await page.evaluate(() => document.fonts.ready);
     const bar = page.getByTestId("legal-bar");
     expect((await bar.boundingBox())?.height ?? 999).toBeLessThan(48);
     const clipped = await bar.locator("p").evaluate((p) => p.scrollWidth > p.clientWidth || getComputedStyle(p).textOverflow === "ellipsis");
