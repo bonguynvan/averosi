@@ -41,5 +41,18 @@ export function candles(symbol: string, timeframe: Timeframe): Promise<CandleRes
   return candleCache.get(`${symbol}:${timeframe}`, () => candleSource.candles(symbol, timeframe));
 }
 
+const SPARKLINE_POINTS = 24;
+
+/** Last 24 hourly closes per symbol for landing sparklines. Symbols whose candles fail are omitted. */
+export async function sparklineSeries(symbols: readonly string[]): Promise<Readonly<Record<string, readonly number[]>>> {
+  const results = await Promise.allSettled(symbols.map((s) => candles(s, "1h")));
+  return Object.fromEntries(
+    symbols.flatMap((symbol, i) => {
+      const r = results[i];
+      return r?.status === "fulfilled" ? [[symbol, r.value.bars.slice(-SPARKLINE_POINTS).map((b) => b.close)]] : [];
+    }),
+  );
+}
+
 /** 30 chart loads per minute per client. */
 export const candleRateLimiter = createRateLimiter({ limit: 30, windowMs: 60_000 });

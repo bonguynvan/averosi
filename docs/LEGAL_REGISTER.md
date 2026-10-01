@@ -75,5 +75,6 @@ MoF accepted 5/7 exchange dossiers (03/2026): VIX (VIXEX), Lộc Phát (LPEX), V
 ## Change log
 
 - 2026-10-01 — Initial register.
+- 2026-10-01 — Public legal tracker (/phap-ly) launched from `content/phap-ly`. Instrument numbers verified: Luật 71/2025/QH15, Luật 91/2025/QH15, Luật 109/2025/QH15, NQ 05/2025/NQ-CP, NĐ 356/2025/NĐ-CP, NĐ 284/2026/NĐ-CP, TT 32/2026/TT-BTC (VAT-exempt, 20% CIT for organisations). Landing page added. Highlights avoid "top gainers".
 - 2026-10-01 — Market module: owner approved using major foreign exchanges' public data while no VN exchange is licensed (no revenue, no transactions). Added R11. FX switched from SBV central rate (not machine-accessible) to Vietcombank's published rate, disclosed on every market view.
 - 2026-10-01 — Re-checked before building /rui-ro: no new instrument; no exchange licensed yet; added third-party data table. Commentary on NĐ 284 (LuatVietnam) treats informational/analytical content as distinct from service provision. Open question about the risk checker remains.

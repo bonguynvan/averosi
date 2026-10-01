@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 // DATA_MODE=fixture: Coinbase/Kraken/Bitstamp ok, Gemini down, FX 25.780 ₫/USD (src/lib/market/fixtures.ts).
 
 test("market overview shows VND reference prices with sources and FX attribution", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/thi-truong");
   const table = page.getByTestId("market-table");
   await expect(table.getByRole("rowheader", { name: /BTC/ })).toBeVisible();
   // median of 83.5k × {1.001, 1, 0.999} = 83.500 USD × 25.780 = 2.152.630.000 ₫
@@ -17,7 +17,7 @@ test("market overview shows VND reference prices with sources and FX attribution
 });
 
 test("no outbound links to exchanges anywhere on market pages", async ({ page }) => {
-  for (const path of ["/", "/tai-san/btc"]) {
+  for (const path of ["/", "/thi-truong", "/tai-san/btc"]) {
     await page.goto(path);
     const hrefs = await page.locator("a[href]").evaluateAll((as) => as.map((a) => a.getAttribute("href") ?? ""));
     expect(hrefs.filter((h) => /coinbase|kraken|bitstamp|gemini|binance/i.test(h))).toEqual([]);
@@ -29,7 +29,7 @@ test("asset detail renders a read-only candle chart from the same-origin proxy",
   page.on("request", (r) => requested.push(r.url()));
   const candleRequests = () => requested.filter((u) => u.includes("/api/nen/"));
 
-  await page.goto("/");
+  await page.goto("/thi-truong");
   await page.getByTestId("market-table").getByRole("link", { name: /BTC/ }).click();
   await expect(page).toHaveURL(/\/tai-san\/btc$/);
   await expect(page.getByTestId("asset-price")).toContainText("2.152.630.000 ₫");

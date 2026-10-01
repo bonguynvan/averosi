@@ -8,10 +8,11 @@
 
 | Module | Route | What it does | Data |
 |---|---|---|---|
-| Thị trường ✅ | `/`, `/tai-san/[symbol]` | Median reference price of 14 assets from 4 exchanges' USD fiat pairs (Coinbase, Kraken, Bitstamp, Gemini), VND at Vietcombank's USD transfer rate, 24h change, aggregated volume, source health. Detail page: `@tradecanvas/chart` candles via the same-origin proxy `/api/nen/[symbol]`. | Exchange public APIs + Vietcombank feed |
+| Tổng quan ✅ | `/` | Landing (Binance/CMC-style, Vietnamese framing): hero with VND price board + sparklines, headline stats, neutral highlights (volume, absolute move, source deviation, never "top gainers"), tools bento, legal timeline, FAQ. | Market service + `content/phap-ly` |
+| Thị trường ✅ | `/thi-truong`, `/tai-san/[symbol]` | Median reference price of 14 assets from 4 exchanges' USD fiat pairs (Coinbase, Kraken, Bitstamp, Gemini), VND at Vietcombank's USD transfer rate, 24h change, aggregated volume, source health. Detail page: `@tradecanvas/chart` candles via the same-origin proxy `/api/nen/[symbol]`. | Exchange public APIs + Vietcombank feed |
 | Trung tâm rủi ro | `/rui-ro` | Paste an address or contract and get a risk report: sanctions list hit, known-scam lists, token approvals, contract flags (honeypot/proxy/owner mint). Shows the methodology. | Public RPC, OFAC SDN, open scam lists |
 | Theo dõi ví công khai | `/vi` | Watch public addresses: balances and recent transfers. Watchlist stored in `localStorage` only. | Public RPC / indexer |
-| Pháp lý | `/phap-ly` | Readable tracker of Vietnamese crypto law with effective dates and source links, generated from `content/legal-tracker/`. | Repo content |
+| Pháp lý ✅ | `/phap-ly`, `/phap-ly/[slug]` | Tracker of Vietnamese crypto law: status computed from effective dates (UTC+7), category filter via `?nhom=`, impacts, penalty tables, official sources, licensing status. | `content/phap-ly/*.md` (zod-validated) |
 | Công cụ thuế | `/thue` | 0.1% transfer-tax calculator (client-side, nothing stored). | Pure function |
 | Kiến thức | `/kien-thuc` | Education: self-custody safety, scam patterns, how the pilot market works. | MDX |
 | Policies | `/mien-tru-trach-nhiem`, `/dieu-khoan`, `/quyen-rieng-tu` | Versioned legal pages. | `content/policies/` |
@@ -75,7 +76,7 @@ averosi-v2/
 ├── docs/                             # ARCHITECTURE, DESIGN, LEGAL_REGISTER, ADRs
 ├── content/
 │   ├── policies/                     # disclaimer / terms / privacy (versioned MD)
-│   ├── legal-tracker/                # one MD file per legal instrument (frontmatter)
+│   ├── phap-ly/                      # one MD file per legal instrument (frontmatter, zod-validated)
 │   └── kien-thuc/                    # education MDX
 ├── packages/
 │   └── core/                         # pure TS, zero I/O, 100% unit-tested

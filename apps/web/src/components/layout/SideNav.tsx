@@ -24,13 +24,13 @@ export function SideNav({ initialCollapsed }: { initialCollapsed: boolean }) {
   };
 
   return (
+    // Outer column spans the full content height (border + background); the nav inside sticks.
+    <div className={`hidden shrink-0 border-r border-outline-subtle bg-surface-lowest [view-transition-name:sidebar] md:block ${collapsed ? "w-14" : "w-64"}`}>
     <nav
       id={NAV_ID}
       aria-label="Điều hướng chính"
       data-collapsed={collapsed}
-      className={`sticky top-[var(--ds-shell-top)] hidden h-[calc(100dvh-var(--ds-shell-top))] shrink-0 flex-col overflow-y-auto overscroll-contain border-r border-outline-subtle bg-surface-lowest [view-transition-name:sidebar] md:flex ${
-        collapsed ? "w-14" : "w-64"
-      }`}
+      className="sticky top-[var(--ds-shell-top)] flex max-h-[calc(100dvh-var(--ds-shell-top))] flex-col overflow-y-auto overscroll-contain"
     >
       <div className={`flex items-center pt-3 pb-2 ${collapsed ? "justify-center" : "justify-between px-4"}`}>
         {!collapsed && <span className="label-caps text-accent">Bàn làm việc</span>}
@@ -56,5 +56,6 @@ export function SideNav({ initialCollapsed }: { initialCollapsed: boolean }) {
         ))}
       </ul>
     </nav>
+    </div>
   );
 }

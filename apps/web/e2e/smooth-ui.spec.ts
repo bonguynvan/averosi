@@ -4,7 +4,7 @@ test.describe("desktop shell", () => {
   test.use({ viewport: { width: 1280, height: 640 } });
 
   test("legal bar, sidebar and table header stay pinned while the page scrolls", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/thi-truong");
     const readShellTop = () => page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ds-shell-top")) || 0);
     // Published by ShellMetrics after hydration.
     await expect.poll(readShellTop).toBeGreaterThan(50);
@@ -26,7 +26,7 @@ test.describe("desktop shell", () => {
   });
 
   test("collapsible panels toggle with proper ARIA state; legal notices are not collapsible", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/thi-truong");
     const toggle = page.getByRole("button", { name: "Cách tính" });
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
     await expect(page.getByText("Quy đổi VNĐ theo tỷ giá USD chuyển khoản")).toBeVisible();

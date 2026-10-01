@@ -1,8 +1,6 @@
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import type { Policy } from "@/lib/policies";
+import { Prose } from "../ui/Prose";
 
-/** Renders repo-owned Markdown. Raw HTML is not enabled (react-markdown default), so content cannot inject markup. */
 export function PolicyArticle({ policy }: { policy: Policy }) {
   const { meta } = policy;
   return (
@@ -13,9 +11,7 @@ export function PolicyArticle({ policy }: { policy: Policy }) {
         <span>Cập nhật {meta.updatedAt}</span>
         <span className="text-warning">{meta.status}</span>
       </p>
-      <div className="policy-prose space-y-3 text-[15px] leading-6 text-text [&_a]:text-accent [&_a]:underline [&_h1]:font-mono [&_h1]:text-[22px] [&_h1]:leading-7 [&_h1]:font-bold [&_li]:ml-5 [&_ol]:list-decimal [&_ol]:space-y-2 [&_strong]:text-text [&_ul]:list-disc">
-        <Markdown remarkPlugins={[remarkGfm]}>{policy.body}</Markdown>
-      </div>
+      <Prose markdown={policy.body} />
     </article>
   );
 }

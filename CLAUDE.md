@@ -12,7 +12,7 @@ Read before working:
 
 Before implementing any feature that touches prices, trading, wallets, payments, user data, advertising, or messaging:
 
-1. Re-check the latest Vietnamese law (web search: NQ 05/2025, NĐ 284/2026, Bộ Tài chính, NHNN, PDPL/NĐ 356). If something changed, update `docs/LEGAL_REGISTER.md` (table, sources, change log, `reviewedAt`, `nextReviewDue`) **first**.
+1. Re-check the latest Vietnamese law (web search: NQ 05/2025, NĐ 284/2026, Bộ Tài chính, NHNN, PDPL/NĐ 356). If something changed, update `docs/LEGAL_REGISTER.md` (table, sources, change log, `reviewedAt`, `nextReviewDue`) **first**, then the public tracker: `content/phap-ly/*.md` and `LICENSING_STATUS` in `apps/web/src/lib/legal.ts`. Only verified numbers and dates, each with an official or reputable source.
 2. Map the feature to rules R1–R10. If it conflicts or is ambiguous, **stop and ask the owner**. Do not build it "for now".
 3. If the feature changes what data we touch or what we promise, update `content/policies/*` and bump their `version` / `updatedAt` in the same change.
 

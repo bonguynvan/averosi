@@ -37,7 +37,7 @@ async function AssetContent({ asset }: { asset: AssetInfo }) {
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="flex min-w-0 flex-col gap-4">
         <nav aria-label="Đường dẫn" className="font-mono text-[12px] text-text-muted">
-          <Link href="/" className="hover:text-accent">
+          <Link href="/thi-truong" className="hover:text-accent">
             Thị trường
           </Link>{" "}
           / <span className="text-text">{asset.symbol}</span>

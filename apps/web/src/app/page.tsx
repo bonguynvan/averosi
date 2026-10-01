@@ -1,41 +1,163 @@
+import {
+  type MarketAsset,
+  findAsset,
+  formatUsdMicros,
+  formatVnd,
+  formatVndCompact,
+  sparklinePath,
+  topByAbsChange,
+  topByVolume,
+  totalVolume,
+  usdMicrosToVnd,
+} from "@app/core";
+import type { Metadata } from "next";
 import { Suspense } from "react";
-import { MarketNotice } from "@/components/market/MarketNotice";
-import { MarketTable } from "@/components/market/MarketTable";
-import { SourceStatusList } from "@/components/market/SourceStatusList";
-import { PageSkeleton } from "@/components/ui/PageSkeleton";
-import { Panel } from "@/components/ui/Panel";
-import { marketOverview } from "@/lib/market/instance";
+import { Faq } from "@/components/landing/Faq";
+import { Hero } from "@/components/landing/Hero";
+import { Highlights } from "@/components/landing/Highlights";
+import { LegalTimeline } from "@/components/landing/LegalTimeline";
+import { type BoardRow, PriceBoard } from "@/components/landing/PriceBoard";
+import { type Stat, StatsStrip } from "@/components/landing/StatsStrip";
+import { ToolsBento } from "@/components/landing/ToolsBento";
+import { Change } from "@/components/market/Change";
+import { BRAND } from "@/lib/brand";
+import { listInstruments } from "@/lib/legal";
+import { marketOverview, sparklineSeries } from "@/lib/market/instance";
 
-async function MarketContent() {
+export const metadata: Metadata = {
+  title: { absolute: `${BRAND.name}: giá crypto bằng VNĐ, kiểm tra rủi ro ví, pháp lý tài sản mã hóa Việt Nam` },
+};
+
+const BOARD_ROWS = 6;
+const vnTime = (d: Date) => d.toLocaleTimeString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit" });
+
+function toRow(a: MarketAsset, series: Readonly<Record<string, readonly number[]>>): BoardRow {
+  const points = series[a.symbol];
+  return {
+    symbol: a.symbol,
+    name: findAsset(a.symbol)?.name ?? a.symbol,
+    priceVnd: a.priceVnd === null ? formatUsdMicros(a.priceUsdMicros) : formatVnd(a.priceVnd),
+    change24hBps: a.change24hBps,
+    spark: points ? sparklinePath(points, 96, 28) : null,
+  };
+}
+
+async function BoardSection() {
   const overview = await marketOverview();
+  const byVolume = topByVolume(overview.assets, BOARD_ROWS);
+  const byMove = topByAbsChange(overview.assets, BOARD_ROWS);
+  const symbols = [...new Set([...byVolume, ...byMove].map((a) => a.symbol))];
+  const series = await sparklineSeries(symbols);
+  const updated = overview.sources.flatMap((s) => (s.fetchedAt ? [s.fetchedAt] : []))[0];
+
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
-      <div className="flex min-w-0 flex-col gap-4">
-        <h1 className="font-mono text-[22px] leading-7 font-bold text-text">Thị trường</h1>
-        <Panel title="Giá tham khảo · VNĐ" aside={<span className="label-caps text-text-muted">Trung vị nhiều nguồn</span>}>
-          {overview.assets.length === 0 ? (
-            <p role="status" className="text-[13px] text-text-muted">
-              Dữ liệu tạm thời không khả dụng. Không có số liệu nào được hiển thị thay thế.
-            </p>
-          ) : (
-            <MarketTable assets={overview.assets} />
-          )}
-          <div className="mt-3 border-t border-outline-subtle pt-3">
-            <SourceStatusList sources={overview.sources} fx={overview.fx} />
-          </div>
-        </Panel>
-      </div>
-      <aside className="flex flex-col gap-4" aria-label="Phương pháp và lưu ý">
-        <MarketNotice />
-      </aside>
-    </div>
+    <PriceBoard
+      updatedAt={updated ? vnTime(updated) : "—"}
+      tabs={[
+        { id: "volume", label: "Khối lượng lớn", rows: byVolume.map((a) => toRow(a, series)) },
+        { id: "move", label: "Biến động mạnh (±)", rows: byMove.map((a) => toRow(a, series)) },
+      ]}
+    />
   );
 }
 
-export default function MarketsPage() {
+async function MarketSections() {
+  const overview = await marketOverview();
+  const { assets, fx, sources } = overview;
+  const btc = assets.find((a) => a.symbol === "BTC");
+  const eth = assets.find((a) => a.symbol === "ETH");
+  const volumeUsd = totalVolume(assets);
+  const okSources = sources.filter((s) => s.status === "ok").length;
+  const toVnd = (usdMicros: bigint) => (fx.status === "ok" ? formatVndCompact(usdMicrosToVnd(usdMicros, fx.rateVnd)) : formatUsdMicros(usdMicros));
+
+  const priceStat = (label: string, a: MarketAsset | undefined): Stat => ({
+    label,
+    value: (
+      <span className="flex items-baseline gap-2">
+        {a?.priceVnd != null ? formatVndCompact(a.priceVnd) : "—"}
+        <span className="text-[12px] font-normal">
+          <Change bps={a?.change24hBps ?? null} />
+        </span>
+      </span>
+    ),
+  });
+
+  const stats: Stat[] = [
+    { label: "Tỷ giá USD/VNĐ", value: fx.status === "ok" ? formatVnd(fx.rateVnd) : "—", note: fx.status === "ok" ? "Vietcombank · chuyển khoản" : "không phản hồi" },
+    priceStat("Bitcoin", btc),
+    priceStat("Ethereum", eth),
+    { label: "KL 24h tổng hợp", value: toVnd(volumeUsd), note: `${assets.length} tài sản theo dõi` },
+    { label: "Nguồn dữ liệu", value: `${okSources}/${sources.length}`, note: okSources === sources.length ? "Tất cả phản hồi" : "Một số nguồn gián đoạn" },
+  ];
+
+  const deviation = [...assets].sort((a, b) => b.maxDeviationBps - a.maxDeviationBps).slice(0, 3);
+
   return (
-    <Suspense fallback={<PageSkeleton />}>
-      <MarketContent />
-    </Suspense>
+    <>
+      <StatsStrip stats={stats} />
+      <Highlights
+        cards={[
+          {
+            title: "Khối lượng 24h lớn nhất",
+            caption: "Cộng trên các nguồn tổng hợp",
+            rows: topByVolume(assets, 3).map((a) => ({ symbol: a.symbol, primary: toVnd(a.volume24hUsdMicros) })),
+          },
+          {
+            title: "Biến động 24h mạnh nhất",
+            caption: "Tính cả tăng và giảm, xếp theo độ lớn",
+            rows: topByAbsChange(assets, 3).map((a) => ({ symbol: a.symbol, primary: <Change bps={a.change24hBps} /> })),
+          },
+          {
+            title: "Độ lệch giữa các nguồn",
+            caption: "Chênh lệch lớn nhất so với giá trung vị",
+            rows: deviation.map((a) => ({
+              symbol: a.symbol,
+              primary: <span className="text-text">{(a.maxDeviationBps / 100).toFixed(2).replace(".", ",")}%</span>,
+              secondary: `${a.sources.length}/${sources.length} nguồn`,
+            })),
+          },
+        ]}
+      />
+    </>
+  );
+}
+
+async function LegalSection() {
+  return <LegalTimeline instruments={await listInstruments()} now={new Date()} />;
+}
+
+function BlockSkeleton({ className }: { className: string }) {
+  return <div aria-hidden="true" className={`skeleton ${className}`} />;
+}
+
+export default function LandingPage() {
+  return (
+    <div className="flex flex-col gap-10">
+      <Hero
+        board={
+          <Suspense fallback={<BlockSkeleton className="h-[420px]" />}>
+            <BoardSection />
+          </Suspense>
+        }
+      />
+      <Suspense
+        fallback={
+          <div className="flex flex-col gap-4">
+            <BlockSkeleton className="h-20" />
+            <BlockSkeleton className="h-48" />
+          </div>
+        }
+      >
+        <MarketSections />
+      </Suspense>
+      <ToolsBento />
+      <Suspense fallback={<BlockSkeleton className="h-48" />}>
+        <LegalSection />
+      </Suspense>
+      <Faq />
+      <p className="border-t border-outline-subtle pt-4 text-[12px] leading-5 text-text-muted">
+        Giá tham khảo, không phải báo giá giao dịch và không phải lời khuyên đầu tư. Tên sàn chỉ dùng để ghi nguồn dữ liệu.
+      </p>
+    </div>
   );
 }
