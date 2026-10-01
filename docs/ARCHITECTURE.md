@@ -1,6 +1,6 @@
 # Averosi — Architecture
 
-**averosi.com** — free, open-source, read-only Web3 data & risk terminal for Vietnamese users, aligned with Vietnam's digital-transformation direction. Legal constraints: [LEGAL_REGISTER.md](LEGAL_REGISTER.md). Design: [DESIGN.md](DESIGN.md).
+**Averosi / averosi.com (working name; see `apps/web/src/lib/brand.ts`)**: a free, open-source, read-only Web3 data & risk terminal for Vietnamese users, aligned with Vietnam's digital-transformation direction. Legal constraints: [LEGAL_REGISTER.md](LEGAL_REGISTER.md). Design: [DESIGN.md](DESIGN.md).
 
 ## 1. Product scope
 

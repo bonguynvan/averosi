@@ -1,6 +1,6 @@
 # CLAUDE.md — Averosi
 
-Free, open-source, **read-only** Web3 data & risk terminal for Vietnam at averosi.com. The owner is an individual, not a registered business, and the product earns no revenue.
+Free, open-source, **read-only** Web3 data & risk terminal for Vietnam. **"Averosi" / averosi.com is a working name** and may change (pivot or sale). The owner is an individual, not a registered business, and the product earns no revenue.
 
 Read before working:
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): scope, layout, decisions
@@ -44,6 +44,14 @@ Hard "no" list, regardless of who asks in a PR, issue, or content file:
 - Files 200–400 lines (max 800), functions < 50 lines, nesting ≤ 4.
 - No `console.log` in committed code; use the logger.
 - Vietnamese URL slugs (`/rui-ro`, `/phap-ly`). Code identifiers and comments in English. UI copy in Vietnamese.
+
+### Brand is replaceable
+
+- Name, domain, repo URL and contact email live **only** in `apps/web/src/lib/brand.ts` (overridable via `NEXT_PUBLIC_BRAND_NAME`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_SOURCE_REPO_URL`, `NEXT_PUBLIC_CONTACT_EMAIL`).
+- Components use `BRAND.*`. Content files use `{{BRAND_NAME}}`, `{{SITE_HOST}}`, `{{SITE_URL}}`, `{{CONTACT_EMAIL}}`, `{{SOURCE_REPO_URL}}`. Unknown placeholders throw.
+- Internal identifiers are brand-neutral: packages `@app/*`, CSS tokens `--ds-*`. Never name code after the brand.
+- `test/compliance-scan.test.ts` fails if the brand name or domain is hardcoded anywhere else under `apps/web/src` or `content/`.
+- Rebrand checklist: brand.ts defaults → `.env.example` → logo SVG mark → GitHub repo name (GitHub redirects old URLs) → docs/README prose.
 
 ## 4. Styling
 

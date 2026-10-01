@@ -27,7 +27,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test:coverage
       - run: pnpm build
-      - run: pnpm --filter @averosi/web exec playwright install --with-deps chromium
+      - run: pnpm --filter @app/web exec playwright install --with-deps chromium
       - run: pnpm test:e2e
       - if: failure()
         uses: actions/upload-artifact@v4

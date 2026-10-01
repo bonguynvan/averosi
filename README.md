@@ -22,7 +22,7 @@ Yêu cầu Node ≥ 22, pnpm 10.
 pnpm install
 pnpm dev            # http://localhost:3000
 pnpm check          # lint + typecheck + test + build
-pnpm test:e2e       # Playwright (cần: pnpm --filter @averosi/web exec playwright install chromium)
+pnpm test:e2e       # Playwright (cần: pnpm --filter @app/web exec playwright install chromium)
 ```
 
 ## Tài liệu
@@ -35,6 +35,10 @@ pnpm test:e2e       # Playwright (cần: pnpm --filter @averosi/web exec playwri
 ## Đóng góp
 
 Mọi đóng góp phải tuân thủ các nguyên tắc R1–R10 trong [LEGAL_REGISTER](docs/LEGAL_REGISTER.md). Pull request thêm liên kết giới thiệu sàn, nút giao dịch, lời khuyên đầu tư hay thu thập dữ liệu cá nhân sẽ bị từ chối.
+
+## Đổi tên thương hiệu
+
+"Averosi" là tên tạm thời. Tên, domain, email liên hệ và link mã nguồn chỉ nằm trong `apps/web/src/lib/brand.ts` và có thể ghi đè bằng biến môi trường `NEXT_PUBLIC_*` (xem `.env.example`). Nội dung chính sách dùng placeholder `{{BRAND_NAME}}`.
 
 ## Giấy phép
 

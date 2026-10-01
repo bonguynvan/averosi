@@ -5,12 +5,13 @@ import { LegalBar } from "@/components/layout/LegalBar";
 import { MobileNav, SideNav } from "@/components/layout/SideNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { BRAND } from "@/lib/brand";
 import { inter, jetbrainsMono } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://averosi.com"),
-  title: { default: "Averosi — Dữ liệu Web3 cho người Việt", template: "%s · Averosi" },
+  metadataBase: new URL(BRAND.siteUrl),
+  title: { default: `${BRAND.name} — Dữ liệu Web3 cho người Việt`, template: `%s · ${BRAND.name}` },
   description:
     "Công cụ mã nguồn mở, miễn phí, chỉ đọc: dữ liệu blockchain công khai, kiểm tra rủi ro ví, pháp lý tài sản mã hóa Việt Nam. Không phải sàn giao dịch.",
 };

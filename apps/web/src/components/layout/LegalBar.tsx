@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BRAND } from "@/lib/brand";
 
 /** Persistent disclaimer strip — rendered in the root layout; never remove or make dismissible (CLAUDE.md §2). */
 export function LegalBar() {
@@ -10,7 +11,7 @@ export function LegalBar() {
     >
       <span className="shrink-0 font-bold text-danger">⚠ PHÁP LÝ:</span>
       <p className="min-w-0 flex-1">
-        Averosi là công cụ mã nguồn mở, miễn phí, chỉ hiển thị dữ liệu công khai. Không phải sàn giao dịch, không lưu ký,
+        {BRAND.name} là công cụ mã nguồn mở, miễn phí, chỉ hiển thị dữ liệu công khai. Không phải sàn giao dịch, không lưu ký,
         không được cấp phép và không phải lời khuyên đầu tư.{" "}
         <Link href="/mien-tru-trach-nhiem" className="text-accent underline-offset-2 hover:underline">
           Chi tiết

@@ -1,4 +1,4 @@
-import { findBannedCopy } from "@averosi/core";
+import { findBannedCopy } from "@app/core";
 import { expect, test } from "@playwright/test";
 
 const ROUTES = ["/", "/rui-ro", "/vi", "/thue", "/phap-ly", "/kien-thuc", "/mien-tru-trach-nhiem", "/dieu-khoan", "/quyen-rieng-tu", "/thay-doi-chinh-sach"];

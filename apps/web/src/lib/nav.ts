@@ -20,5 +20,3 @@ export const FOOTER_LINKS: readonly { href: string; label: string }[] = [
   { href: "/quyen-rieng-tu", label: "Quyền riêng tư" },
   { href: "/thay-doi-chinh-sach", label: "Lịch sử chính sách" },
 ];
-
-export const SOURCE_REPO_URL = "https://github.com/bonguynvan/averosi";

@@ -1,5 +1,5 @@
 {
-  "name": "@averosi/web",
+  "name": "@app/web",
   "version": "0.1.0",
   "private": true,
   "license": "Apache-2.0",
@@ -14,7 +14,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@averosi/core": "workspace:*",
+    "@app/core": "workspace:*",
     "gray-matter": "^4.0.3",
     "next": "^16.3.8",
     "react": "^19.3.0",

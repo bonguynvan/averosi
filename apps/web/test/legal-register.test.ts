@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { isReviewOverdue } from "@averosi/core";
+import { isReviewOverdue } from "@app/core";
 import matter from "gray-matter";
 import { describe, expect, test } from "vitest";
 import { REPO_ROOT } from "@/lib/paths";

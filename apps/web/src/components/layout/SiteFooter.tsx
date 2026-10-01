@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { FOOTER_LINKS, SOURCE_REPO_URL } from "@/lib/nav";
+import { BRAND } from "@/lib/brand";
+import { FOOTER_LINKS } from "@/lib/nav";
 import { loadAllPolicies } from "@/lib/policies";
 
 export async function SiteFooter() {
@@ -17,7 +18,7 @@ export async function SiteFooter() {
           </li>
         ))}
         <li>
-          <a href={SOURCE_REPO_URL} className="hover:text-accent" rel="noopener noreferrer">
+          <a href={BRAND.sourceRepoUrl} className="hover:text-accent" rel="noopener noreferrer">
             Mã nguồn (Apache-2.0)
           </a>
         </li>

@@ -23,7 +23,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@averosi/core':
+      '@app/core':
         specifier: workspace:*
         version: link:../../packages/core
       gray-matter:

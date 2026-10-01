@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Panel } from "@/components/ui/Panel";
 import { loadAllPolicies } from "@/lib/policies";
-import { SOURCE_REPO_URL } from "@/lib/nav";
+import { BRAND } from "@/lib/brand";
 
 export const metadata: Metadata = { title: "Lịch sử chính sách" };
 
@@ -37,7 +37,7 @@ export default async function PolicyHistoryPage() {
         </table>
         <p className="mt-4 text-[13px] text-text-muted">
           Toàn bộ lịch sử chỉnh sửa được lưu công khai trong{" "}
-          <a href={`${SOURCE_REPO_URL}/commits/main/content/policies`} className="text-accent hover:underline" rel="noopener noreferrer">
+          <a href={`${BRAND.sourceRepoUrl}/commits/main/content/policies`} className="text-accent hover:underline" rel="noopener noreferrer">
             kho mã nguồn
           </a>
           .

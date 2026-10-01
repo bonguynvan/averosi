@@ -11,7 +11,7 @@ const SECURITY_HEADERS = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  transpilePackages: ["@averosi/core"],
+  transpilePackages: ["@app/core"],
   async headers() {
     return [{ source: "/:path*", headers: SECURITY_HEADERS }];
   },

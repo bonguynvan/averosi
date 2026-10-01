@@ -1,6 +1,6 @@
 "use client";
 
-import { estimateTransferTax, formatVnd, parseVndInput } from "@averosi/core";
+import { estimateTransferTax, formatVnd, parseVndInput } from "@app/core";
 import { useId, useState } from "react";
 
 const PARSE_ERRORS: Record<string, string> = {

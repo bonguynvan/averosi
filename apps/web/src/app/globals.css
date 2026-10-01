@@ -4,80 +4,80 @@
 /* Map design tokens (design/tokens.css) to Tailwind utilities. Raw hex values are not allowed in components. */
 @theme inline {
   --color-*: initial;
-  --color-canvas: var(--av-color-canvas);
-  --color-surface-lowest: var(--av-color-surface-lowest);
-  --color-surface-low: var(--av-color-surface-low);
-  --color-surface: var(--av-color-surface);
-  --color-surface-high: var(--av-color-surface-high);
-  --color-surface-highest: var(--av-color-surface-highest);
-  --color-outline-subtle: var(--av-color-outline-subtle);
-  --color-outline: var(--av-color-outline);
-  --color-outline-warm: var(--av-color-outline-warm);
-  --color-text: var(--av-color-text);
-  --color-text-muted: var(--av-color-text-muted);
-  --color-text-faint: var(--av-color-text-faint);
-  --color-text-on-accent: var(--av-color-text-on-accent);
-  --color-accent: var(--av-color-accent);
-  --color-accent-soft: var(--av-color-accent-soft);
-  --color-accent-tint: var(--av-color-accent-tint);
-  --color-up: var(--av-color-up);
-  --color-down: var(--av-color-down);
-  --color-flat: var(--av-color-flat);
-  --color-success: var(--av-color-success);
-  --color-warning: var(--av-color-warning);
-  --color-danger: var(--av-color-danger);
-  --color-danger-container: var(--av-color-danger-container);
+  --color-canvas: var(--ds-color-canvas);
+  --color-surface-lowest: var(--ds-color-surface-lowest);
+  --color-surface-low: var(--ds-color-surface-low);
+  --color-surface: var(--ds-color-surface);
+  --color-surface-high: var(--ds-color-surface-high);
+  --color-surface-highest: var(--ds-color-surface-highest);
+  --color-outline-subtle: var(--ds-color-outline-subtle);
+  --color-outline: var(--ds-color-outline);
+  --color-outline-warm: var(--ds-color-outline-warm);
+  --color-text: var(--ds-color-text);
+  --color-text-muted: var(--ds-color-text-muted);
+  --color-text-faint: var(--ds-color-text-faint);
+  --color-text-on-accent: var(--ds-color-text-on-accent);
+  --color-accent: var(--ds-color-accent);
+  --color-accent-soft: var(--ds-color-accent-soft);
+  --color-accent-tint: var(--ds-color-accent-tint);
+  --color-up: var(--ds-color-up);
+  --color-down: var(--ds-color-down);
+  --color-flat: var(--ds-color-flat);
+  --color-success: var(--ds-color-success);
+  --color-warning: var(--ds-color-warning);
+  --color-danger: var(--ds-color-danger);
+  --color-danger-container: var(--ds-color-danger-container);
   --color-transparent: transparent;
 
-  --font-mono: var(--av-font-mono);
-  --font-prose: var(--av-font-prose);
+  --font-mono: var(--ds-font-mono);
+  --font-prose: var(--ds-font-prose);
 
   /* Sharp everywhere; only LEDs/toggles may be round. */
   --radius-*: initial;
-  --radius-led: var(--av-radius-led);
+  --radius-led: var(--ds-radius-led);
 
   --shadow-*: initial;
 }
 
 :root {
   /* next/font exposes hashed family names via these variables (see app/fonts.ts). */
-  --av-font-mono: var(--font-jetbrains), ui-monospace, monospace;
-  --av-font-prose: var(--font-inter), system-ui, sans-serif;
+  --ds-font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --ds-font-prose: var(--font-inter), system-ui, sans-serif;
   color-scheme: dark;
 }
 
 @layer base {
   html,
   body {
-    background: var(--av-color-canvas);
-    color: var(--av-color-text);
+    background: var(--ds-color-canvas);
+    color: var(--ds-color-text);
   }
   body {
-    font-family: var(--av-font-prose);
+    font-family: var(--ds-font-prose);
     -webkit-font-smoothing: antialiased;
   }
   :focus-visible {
-    outline: 1px solid var(--av-color-accent);
+    outline: 1px solid var(--ds-color-accent);
     outline-offset: 1px;
   }
   ::selection {
-    background: var(--av-color-accent);
-    color: var(--av-color-text-on-accent);
+    background: var(--ds-color-accent);
+    color: var(--ds-color-text-on-accent);
   }
 }
 
 @utility label-caps {
-  font-family: var(--av-font-mono);
+  font-family: var(--ds-font-mono);
   font-size: 11px;
   line-height: 14px;
   font-weight: 700;
-  letter-spacing: var(--av-tracking-caps);
+  letter-spacing: var(--ds-tracking-caps);
   text-transform: uppercase;
 }
 
 @utility terminal-grid {
   background-image:
-    linear-gradient(var(--av-color-surface-low) 1px, transparent 1px),
-    linear-gradient(90deg, var(--av-color-surface-low) 1px, transparent 1px);
-  background-size: var(--av-grid-cell) var(--av-grid-cell);
+    linear-gradient(var(--ds-color-surface-low) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ds-color-surface-low) 1px, transparent 1px);
+  background-size: var(--ds-grid-cell) var(--ds-grid-cell);
 }

@@ -20,7 +20,7 @@ const NEGATED_CLAUSE = /không[^.;!?\n]*$/iu;
 export const BANNED_COPY_RULES: readonly BannedCopyRule[] = [
   { id: "implied-supervision", pattern: /UBCKNN|tuân thủ thông tư/giu, reason: "Implies state supervision or licence" },
   { id: "fabricated-status", pattern: /\binstitutional\b|inst\. member/giu, reason: "Fabricated institutional status" },
-  { id: "investment-advice", pattern: /khuyến nghị (mua|bán|nắm giữ|giao dịch)|averosi khuyến nghị/giu, reason: "Investment advice" },
+  { id: "investment-advice", pattern: /khuyến nghị (mua|bán|nắm giữ|giao dịch)|chúng tôi khuyến nghị/giu, reason: "Investment advice" },
   { id: "call-to-trade", pattern: /mua ngay|bán ngay|giao dịch ngay/giu, reason: "Call to trade" },
   { id: "otc-rate", pattern: /\bOTC\b|USDT\/VND/gu, reason: "Normalises unlicensed P2P/OTC trading" },
   { id: "referral-link", pattern: /[?&](ref|referral|aff)=/giu, reason: "Referral/affiliate link" },

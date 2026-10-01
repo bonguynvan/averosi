@@ -1,5 +1,8 @@
-/** Inline mark from the Stitch logo screen (no remote image hosts). */
+import { BRAND, splitWordmark } from "@/lib/brand";
+
+/** Inline mark from the Stitch logo screen (no remote image hosts). Wordmark comes from BRAND. */
 export function Logo() {
+  const { lead, accent } = splitWordmark(BRAND.name);
   return (
     <span className="flex items-center gap-2">
       <svg viewBox="0 0 36 36" className="h-7 w-7" aria-hidden="true" fill="none">
@@ -9,7 +12,8 @@ export function Logo() {
         <circle cx="18" cy="15" r="2" className="fill-accent" />
       </svg>
       <span className="font-mono text-base font-extrabold tracking-widest text-text">
-        AVER<span className="text-accent">OSI</span>
+        {lead}
+        <span className="text-accent">{accent}</span>
       </span>
     </span>
   );

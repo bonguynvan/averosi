@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
 import { z } from "zod";
+import { BRAND, type Brand, interpolateBrand } from "./brand";
 import { POLICIES_DIR } from "./paths";
 
 export const POLICY_SLUGS = ["mien-tru-trach-nhiem", "dieu-khoan", "quyen-rieng-tu"] as const;
@@ -31,8 +32,8 @@ export interface Policy {
   readonly body: string;
 }
 
-export function parsePolicy(slug: PolicySlug, raw: string): Policy {
-  const { data, content } = matter(raw);
+export function parsePolicy(slug: PolicySlug, raw: string, brand: Brand = BRAND): Policy {
+  const { data, content } = matter(interpolateBrand(raw, brand));
   const parsed = PolicyMetaSchema.safeParse(data);
   if (!parsed.success) {
     throw new Error(`Invalid frontmatter in content/policies/${slug}.md: ${z.prettifyError(parsed.error)}`);

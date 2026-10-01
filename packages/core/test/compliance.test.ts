@@ -11,7 +11,7 @@ describe("findBannedCopy", () => {
   });
 
   test("flags investment advice regardless of case and diacritics casing", () => {
-    expect(findBannedCopy("AVEROSI KHUYẾN NGHỊ MUA")).toContainEqual(expect.objectContaining({ id: "investment-advice" }));
+    expect(findBannedCopy("CHÚNG TÔI KHUYẾN NGHỊ MUA")).toContainEqual(expect.objectContaining({ id: "investment-advice" }));
     expect(findBannedCopy("Mua ngay kẻo lỡ")).toContainEqual(expect.objectContaining({ id: "call-to-trade" }));
   });
 
