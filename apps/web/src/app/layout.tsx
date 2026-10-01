@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { connection } from "next/server";
+import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { LegalBar } from "@/components/layout/LegalBar";
-import { MobileNav, SideNav } from "@/components/layout/SideNav";
+import { MobileNav } from "@/components/layout/MobileNav";
+import { SideNav } from "@/components/layout/SideNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { BRAND } from "@/lib/brand";
+import { SIDEBAR_COOKIE, isSidebarCollapsed } from "@/lib/sidebar";
 import { inter, jetbrainsMono } from "./fonts";
 import "./globals.css";
 
@@ -19,8 +21,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { themeColor: "#000000", colorScheme: "dark" };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  // Opt into dynamic rendering so Next.js can attach the per-request CSP nonce (src/proxy.ts).
-  await connection();
+  // Reading cookies opts into dynamic rendering, which Next.js needs to attach the per-request CSP nonce (src/proxy.ts).
+  const collapsed = isSidebarCollapsed((await cookies()).get(SIDEBAR_COOKIE)?.value);
   return (
     <html lang="vi" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body className="flex min-h-dvh flex-col">
@@ -31,7 +33,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <LegalBar />
         <MobileNav />
         <div className="flex flex-1">
-          <SideNav />
+          <SideNav initialCollapsed={collapsed} />
           <main id="main" className="terminal-grid min-w-0 flex-1 px-4 py-6">
             {children}
           </main>

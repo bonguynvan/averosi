@@ -81,3 +81,6 @@ Gotchas:
 - Inside `packages/core`, import without `.js` suffixes (Turbopack resolves workspace TS sources directly).
 - The root layout calls `connection()` so every page renders dynamically and gets the per-request CSP nonce from `src/proxy.ts`. Don't add inline `<script>` tags; they will be blocked.
 - New routes must be added to `ROUTES` in `apps/web/e2e/compliance.spec.ts`.
+- E2E runs with `RISK_DATA_MODE=fixture` (see `src/lib/risk/fixtures.ts`), so tests never hit live RPC or list hosts. Do a manual live check before shipping risk logic changes.
+- All risk-center copy lives in `src/lib/risk/copy.ts`. Never say an address is "an toàn".
+- Sidebar state is a functional cookie (`ds_sidebar`) read in the root layout. Any new cookie needs a privacy-policy update.

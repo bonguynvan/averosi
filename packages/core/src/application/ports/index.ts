@@ -1,6 +1,10 @@
 import type { EvmAddress } from "../../domain/address";
+import type { ChainKey } from "../../domain/chains";
 import type { Vnd } from "../../domain/money";
+import type { AccountProfile } from "../../domain/risk";
 import type { Sourced } from "../../domain/sourced";
+
+export type { AccountProfile };
 
 /** Read-only ports. No port may sign, send, or custody anything (LEGAL_REGISTER R1). */
 
@@ -23,16 +27,13 @@ export interface FxSource {
 }
 
 export interface ChainReader {
-  nativeBalance(chain: string, address: EvmAddress): Promise<Sourced<bigint>>;
+  accountProfile(chain: ChainKey, address: EvmAddress): Promise<Sourced<AccountProfile>>;
 }
 
-export interface RiskListHit {
-  readonly list: string;
-  readonly label: string;
-}
-
-export interface RiskListSource {
-  lookup(address: EvmAddress): Promise<Sourced<readonly RiskListHit[]>>;
+/** A public address list (sanctions, phishing reports). `name` is shown to users as the source. */
+export interface AddressListSource {
+  readonly name: string;
+  contains(address: EvmAddress): Promise<Sourced<boolean>>;
 }
 
 export interface Clock {

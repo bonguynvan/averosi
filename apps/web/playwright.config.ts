@@ -13,7 +13,9 @@ export default defineConfig({
   webServer: {
     command: `pnpm start --port ${PORT}`,
     url: `http://localhost:${PORT}`,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120_000,
+    // Deterministic offline risk data; never touches real RPC or list hosts in tests.
+    env: { RISK_DATA_MODE: "fixture" },
   },
 });

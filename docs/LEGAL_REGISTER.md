@@ -26,7 +26,7 @@ Individual, **no business registration**, product is **free** (no revenue, no ad
 
 ## Licensed ecosystem (as of 2026-10-01)
 
-MoF accepted 5/7 exchange dossiers (03/2026): VIX (VIXEX), Lộc Phát (LPEX), Việt Nam Thịnh Vượng (CAEX), Techcom (TCEX), CTCP Tài sản số Việt Nam. Rejected: Dolphinex, SSI Digital. **Verify which have actually received licences and are operating before listing them as "được cấp phép".**
+MoF accepted 5/7 exchange dossiers (03/2026): VIX (VIXEX), Lộc Phát (LPEX), Việt Nam Thịnh Vượng (CAEX), Techcom (TCEX), CTCP Tài sản số Việt Nam. Rejected: Dolphinex, SSI Digital. As reported after NĐ 284 took effect (09/2026), **no exchange has yet been licensed**: the five dossiers are "hợp lệ" but not licensed. Do not label any of them "được cấp phép" until an official MoF announcement says so.
 
 ## Product rules derived from the above
 
@@ -42,6 +42,14 @@ MoF accepted 5/7 exchange dossiers (03/2026): VIX (VIXEX), Lộc Phát (LPEX), V
 | R8 Every page shows the disclaimer bar; every price shows source + timestamp + "tham khảo". | R3, R4 |
 | R9 No Telegram/Zalo bots that relay trading signals. | L7, R4 |
 | R10 Do not issue tokens/NFTs or run airdrops. | L2, L3 |
+
+## Third-party data used in production
+
+| Data | Source | Licence | Notes |
+|---|---|---|---|
+| OFAC SDN digital-currency addresses (ETH list, applied to all EVM chains) | github.com/0xB10C/ofac-sanctioned-digital-currency-addresses | MIT (extraction of public US-government data) | Delistings (e.g. Tornado Cash, 03/2025) disappear from the list automatically |
+| Phishing addresses | github.com/scamsniffer/scam-database | GPL-3.0 | Fetched at runtime, not vendored; 7-day delay; attributed on /rui-ro |
+| EVM state (code, nonce, balance, storage slots) | PublicNode RPC (default, overridable) | Public endpoints | Provider sees queried address, not user IP |
 
 ## Open questions (ask a fintech lawyer before acting)
 
@@ -64,3 +72,4 @@ MoF accepted 5/7 exchange dossiers (03/2026): VIX (VIXEX), Lộc Phát (LPEX), V
 ## Change log
 
 - 2026-10-01 — Initial register.
+- 2026-10-01 — Re-checked before building /rui-ro: no new instrument; no exchange licensed yet; added third-party data table. Commentary on NĐ 284 (LuatVietnam) treats informational/analytical content as distinct from service provision. Open question about the risk checker remains.

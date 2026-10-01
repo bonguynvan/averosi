@@ -7,7 +7,7 @@ export interface NavItem {
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/", label: "Thị trường", icon: "◧", ready: false },
-  { href: "/rui-ro", label: "Trung tâm rủi ro", icon: "⛨", ready: false },
+  { href: "/rui-ro", label: "Trung tâm rủi ro", icon: "⛨", ready: true },
   { href: "/vi", label: "Theo dõi ví", icon: "◎", ready: false },
   { href: "/thue", label: "Công cụ thuế 0,1%", icon: "%", ready: true },
   { href: "/phap-ly", label: "Pháp lý crypto VN", icon: "§", ready: false },

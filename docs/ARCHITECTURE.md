@@ -17,6 +17,16 @@
 | Kiến thức | `/kien-thuc` | Education: self-custody safety, scam patterns, how the pilot market works. | MDX |
 | Policies | `/mien-tru-trach-nhiem`, `/dieu-khoan`, `/quyen-rieng-tu` | Versioned legal pages. | `content/policies/` |
 
+### Product pillars (owner direction, 2026-10-01)
+
+All three pillars can live inside the product **when their conditions hold**. Each new feature still goes through the legal gate in CLAUDE.md §1.
+
+| Pillar | Examples | Allowed when | Never |
+|---|---|---|---|
+| Data & bot tracker | on-chain event feed, public-wallet watch, alerts by web push or email | facts only, sourced and timestamped; no trading calls; alerts opt-in; personal data (email/push token) only after a policy update | buy/sell signals, copy-trade, Telegram bots for VN users, labelling private individuals |
+| Client-side utilities | approval revoker, tx decoder, offline tx builder, address-poisoning checker | runs fully in the browser; user's own wallet signs; we never see keys; no fee taken on transactions | custody, relaying signed txs on users' behalf, swaps/bridges, fee-per-transaction |
+| Developer tooling | risk-screening library/API, SIWE helpers, webhook dispatcher, Vietnamese tax/VND formatting libs | open source; free tier first; selling to licensed VASPs/businesses only after business registration | anything that makes us operate a trading/custody service |
+
 ### Later (each needs a LEGAL_REGISTER review first)
 
 - "Sự kiện dữ liệu" feed: factual on-chain/volume anomalies, no verdicts.
@@ -53,7 +63,7 @@ Custody, signing, swaps, order routing, on/off-ramp, OTC/P2P rates, token issuan
 
 - **No database in v1.** All state is either cache (Redis, rebuildable) or content (git). A Postgres instance is added only when a feature needs durable state, and that feature requires a legal review first because it probably means personal data.
 - **Request path never calls external APIs directly** for hot data. The worker fills Redis, and the web layer reads Redis. Missing or stale cache shows "dữ liệu tạm thời không khả dụng" with the stale timestamp, never invented numbers.
-- **Risk check** is on demand. The route handler calls RPC with a timeout and per-IP rate limit, then caches results by address for 10 minutes.
+- **Risk check** (implemented): a POST server action (`app/rui-ro/actions.ts`, so addresses never enter URLs or access logs) validates input, applies a per-IP in-memory limit (10/min), and runs `checkAddressRisk` from core. That use case calls the OFAC and ScamSniffer lists (cached in memory for 6h, last good copy served on failure) and RPC reads (code, nonce, balance, proxy slots, EIP-7702 delegation) in parallel. Reports are cached per chain+address for 10 minutes. Any failing list makes the verdict "unknown", never "low". Caches are in-process for now; move to Redis when the worker or a second instance exists.
 
 ## 3. Repository layout
 
@@ -102,6 +112,7 @@ averosi-v2/
 | Tests | Vitest (core ≥ 90%, overall ≥ 80%), Playwright e2e + screenshots at 320/768/1024/1440 | Matches user rules |
 | Deploy | Docker Compose on VPS behind Caddy + Cloudflare; GitHub Actions build → SSH deploy | Fits the existing VPS (check port/memory with quill & bo-stock) |
 | Analytics | None in v1. If added later: self-hosted, cookieless, aggregate only, disclosed in privacy policy | PDPL (L5) |
+| Charts | `@tradecanvas/chart` (owner's MIT library, from npm, not a local link) for Thị trường / Chi tiết tài sản | Canvas, zero runtime deps, built for trading charts |
 | i18n | Vietnamese first (`lang="vi"`); English later via route prefix `/en` | Target market |
 
 ## 5. Data sources (to verify licence/ToS before use)
