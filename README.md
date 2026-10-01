@@ -13,7 +13,8 @@ Averosi ([averosi.com](https://averosi.com)) là công cụ xem dữ liệu bloc
 | Công cụ thuế 0,1% (`/thue`) | ✅ hoạt động (chạy trên trình duyệt) |
 | Trung tâm rủi ro (`/rui-ro`): OFAC, ScamSniffer, proxy, EIP-7702 | ✅ hoạt động (Ethereum, Base, BNB Chain) |
 | Chính sách (miễn trừ, điều khoản, quyền riêng tư) | ✅ bản nháp có phiên bản |
-| Thị trường, Theo dõi ví, Pháp lý, Kiến thức | 🚧 đang phát triển |
+| Thị trường (`/`, `/tai-san/[mã]`): giá tham khảo VNĐ, biểu đồ nến | ✅ hoạt động (14 tài sản, 4 nguồn USD pháp định) |
+| Theo dõi ví, Pháp lý, Kiến thức | 🚧 đang phát triển |
 
 ## Phát triển
 

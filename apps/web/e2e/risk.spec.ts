@@ -1,6 +1,6 @@
 import { type Page, expect, test } from "@playwright/test";
 
-// Runs against RISK_DATA_MODE=fixture (see playwright.config.ts and src/lib/risk/fixtures.ts).
+// Runs against DATA_MODE=fixture (see playwright.config.ts and src/lib/risk/fixtures.ts).
 const SANCTIONED = "0x0330070FD38Ec3bB94F58FA55D40368271E9e54A";
 const CLEAN_EOA = "0x1111111111111111111111111111111111111111";
 const PROXY = "0x2222222222222222222222222222222222222222";

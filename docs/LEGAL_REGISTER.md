@@ -40,6 +40,7 @@ MoF accepted 5/7 exchange dossiers (03/2026): VIX (VIXEX), Lộc Phát (LPEX), V
 | R6 Collect no personal data in v1 (no accounts, no email, no tracking cookies). Watchlists live in the browser. | L5 |
 | R7 Do not attach real-person identities to wallet addresses. Labels only for public entities with a cited public source (exchange hot wallets, sanctioned addresses). | L5, L3 (data) |
 | R8 Every page shows the disclaimer bar; every price shows source + timestamp + "tham khảo". | R3, R4 |
+| R11 Until a licensed VN exchange publishes market data, prices come from foreign exchanges' public **USD fiat** pairs (never USDT), aggregated by median. Exchange names appear only as data attribution: no links, logos, referral or "where to buy". The visitor's browser never contacts an exchange. | R3, owner decision 2026-10-01 |
 | R9 No Telegram/Zalo bots that relay trading signals. | L7, R4 |
 | R10 Do not issue tokens/NFTs or run airdrops. | L2, L3 |
 
@@ -50,10 +51,12 @@ MoF accepted 5/7 exchange dossiers (03/2026): VIX (VIXEX), Lộc Phát (LPEX), V
 | OFAC SDN digital-currency addresses (ETH list, applied to all EVM chains) | github.com/0xB10C/ofac-sanctioned-digital-currency-addresses | MIT (extraction of public US-government data) | Delistings (e.g. Tornado Cash, 03/2025) disappear from the list automatically |
 | Phishing addresses | github.com/scamsniffer/scam-database | GPL-3.0 | Fetched at runtime, not vendored; 7-day delay; attributed on /rui-ro |
 | EVM state (code, nonce, balance, storage slots) | PublicNode RPC (default, overridable) | Public endpoints | Provider sees queried address, not user IP |
+| Spot prices, 24h change/volume (USD pairs) | Coinbase Exchange, Kraken, Bitstamp, Gemini public market-data APIs | Public, unauthenticated | Server-side only, cached 60s; candles from Coinbase (Kraken fallback), cached 5 min |
+| USD/VND rate | Vietcombank public XML feed ("for reference only, 1 request / 5 min") | Public | Cached 30 min. SBV central-rate site rejects automated access (WAF), so it is not scraped |
 
 ## Open questions (ask a fintech lawyer before acting)
 
-- Does publishing VND-denominated reference prices for assets not listed on licensed exchanges count as "quảng cáo tài sản mã hóa"?
+- Does publishing VND-denominated reference prices (from foreign exchanges, while no VN exchange is licensed) count as "quảng cáo tài sản mã hóa"? Current mitigations: R8, R11, no ranking by gains, no calls to action.
 - Does a free wallet-risk checker count as "dịch vụ liên quan đến tài sản mã hóa" under NĐ 284?
 - Obligations when moving from free → paid (hộ kinh doanh vs công ty; e-invoice).
 
@@ -72,4 +75,5 @@ MoF accepted 5/7 exchange dossiers (03/2026): VIX (VIXEX), Lộc Phát (LPEX), V
 ## Change log
 
 - 2026-10-01 — Initial register.
+- 2026-10-01 — Market module: owner approved using major foreign exchanges' public data while no VN exchange is licensed (no revenue, no transactions). Added R11. FX switched from SBV central rate (not machine-accessible) to Vietcombank's published rate, disclosed on every market view.
 - 2026-10-01 — Re-checked before building /rui-ro: no new instrument; no exchange licensed yet; added third-party data table. Commentary on NĐ 284 (LuatVietnam) treats informational/analytical content as distinct from service provision. Open question about the risk checker remains.

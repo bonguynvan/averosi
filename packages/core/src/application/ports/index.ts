@@ -1,6 +1,7 @@
 import type { EvmAddress } from "../../domain/address";
 import type { ChainKey } from "../../domain/chains";
 import type { Vnd } from "../../domain/money";
+import type { SourceQuote } from "../../domain/market";
 import type { AccountProfile } from "../../domain/risk";
 import type { Sourced } from "../../domain/sourced";
 
@@ -8,22 +9,15 @@ export type { AccountProfile };
 
 /** Read-only ports. No port may sign, send, or custody anything (LEGAL_REGISTER R1). */
 
-export interface AssetQuote {
-  readonly symbol: string;
+/** Public market data of one exchange (USD fiat pairs only). `name` is shown to users as the source. */
+export interface MarketSource {
   readonly name: string;
-  /** USD price in micro-dollars (1e-6) to avoid floats. */
-  readonly priceUsdMicros: bigint;
-  readonly change24hBps: number;
-  readonly volume24hUsdMicros: bigint;
-}
-
-export interface PriceSource {
-  listQuotes(symbols: readonly string[]): Promise<Sourced<readonly AssetQuote[]>>;
+  quotes(symbols: readonly string[]): Promise<Sourced<readonly SourceQuote[]>>;
 }
 
 export interface FxSource {
-  /** SBV central USD/VND rate. Never OTC or stablecoin rates. */
-  usdVndCentralRate(): Promise<Sourced<Vnd>>;
+  /** Official USD/VND reference rate (bank-published or SBV). Never OTC or stablecoin rates (LEGAL_REGISTER R2). */
+  usdVndRate(): Promise<Sourced<Vnd>>;
 }
 
 export interface ChainReader {

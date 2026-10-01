@@ -1,7 +1,7 @@
 import { type AccountProfile, type CheckAddressRiskDeps, sourced } from "@app/core";
 
 /**
- * Deterministic offline sources for e2e tests (RISK_DATA_MODE=fixture). Never enabled by default.
+ * Deterministic offline sources for e2e tests (DATA_MODE=fixture). Never enabled by default.
  * - FIXTURE_SANCTIONED is on the real OFAC SDN list (public data).
  * - Addresses starting with 0x2222 behave as an upgradeable proxy contract.
  * - Addresses starting with 0xdead make every source fail.

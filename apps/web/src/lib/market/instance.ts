@@ -1,0 +1,45 @@
+import "server-only";
+import { MARKET_ASSETS, type MarketOverview, getMarketOverview } from "@app/core";
+import { createRateLimiter } from "../risk/rateLimit";
+import { type CandleResult, type Timeframe, createCandleSource } from "./candles";
+import { createBitstampSource, createCoinbaseSource, createGeminiSource, createKrakenSource } from "./exchanges";
+import { FIXTURE_CANDLES, FIXTURE_FX, FIXTURE_MARKET_SOURCES } from "./fixtures";
+import { createVietcombankFx } from "./fx";
+import { createTtlCache } from "./ttlCache";
+
+const OVERVIEW_TTL_MS = 60_000;
+const CANDLES_TTL_MS = 5 * 60_000;
+const FX_TTL_MS = 30 * 60_000;
+
+const isFixture = process.env.DATA_MODE === "fixture";
+
+/** Sources shown in the methodology panel; order = display order. */
+export const MARKET_SOURCE_NOTES = [
+  { name: "Coinbase", note: "Mỹ · cặp USD" },
+  { name: "Kraken", note: "Mỹ/EU · cặp USD" },
+  { name: "Bitstamp", note: "Luxembourg · cặp USD" },
+  { name: "Gemini", note: "Mỹ · cặp USD" },
+] as const;
+
+const deps = isFixture
+  ? { sources: FIXTURE_MARKET_SOURCES, fx: FIXTURE_FX }
+  : {
+      sources: [createCoinbaseSource(), createKrakenSource(), createBitstampSource(), createGeminiSource()],
+      fx: createVietcombankFx({ ttlMs: FX_TTL_MS }),
+    };
+const candleSource = isFixture ? FIXTURE_CANDLES : createCandleSource();
+
+const overviewCache = createTtlCache({ ttlMs: OVERVIEW_TTL_MS });
+const candleCache = createTtlCache({ ttlMs: CANDLES_TTL_MS });
+const SYMBOLS = MARKET_ASSETS.map((a) => a.symbol);
+
+export function marketOverview(): Promise<MarketOverview> {
+  return overviewCache.get("overview", () => getMarketOverview(deps, { symbols: SYMBOLS }));
+}
+
+export function candles(symbol: string, timeframe: Timeframe): Promise<CandleResult> {
+  return candleCache.get(`${symbol}:${timeframe}`, () => candleSource.candles(symbol, timeframe));
+}
+
+/** 30 chart loads per minute per client. */
+export const candleRateLimiter = createRateLimiter({ limit: 30, windowMs: 60_000 });

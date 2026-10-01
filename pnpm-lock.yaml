@@ -26,6 +26,9 @@ importers:
       '@app/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@tradecanvas/chart':
+        specifier: ^1.1.0
+        version: 1.1.0
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3
@@ -620,6 +623,15 @@ packages:
 
   '@tailwindcss/postcss@4.3.3':
     resolution: {integrity: sha512-JTSZZGQi1AyKirbLN3azmjVzef92tcX7h+iSqPdaeStyFpGpDlKvvpxeOE8njhbUanbRwr3z8DyzhICWnMtQeg==}
+
+  '@tradecanvas/chart@1.1.0':
+    resolution: {integrity: sha512-yd4d/FKsCCrFmHSJRvxC36JkCHUs4pfhKP5mF2asw4OS1YbZ9Esb4nLQ+HK0l8oJOpTVxs8CPbcEvejCBpZbSQ==}
+
+  '@tradecanvas/commons@1.1.0':
+    resolution: {integrity: sha512-NxgTWQlJBcVzEhI7S1m9KAxw5hZmo2hgtbba+UtpjCheYgmS9JwUlHsGbwT1sNu0Jzb6iXXUdqHm6Pa6lEBOLw==}
+
+  '@tradecanvas/core@1.1.0':
+    resolution: {integrity: sha512-r4C5pCr5a+LyuZFsy3bZ6a2rNnakiprYaQtGF60HXiT6WNzpPAiSOfxAl9NzQ9xvuiXehW1sKYkmJjI6WFm6kg==}
 
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
@@ -2213,6 +2225,17 @@ snapshots:
       '@tailwindcss/oxide': 4.3.3
       postcss: 8.5.28
       tailwindcss: 4.3.3
+
+  '@tradecanvas/chart@1.1.0':
+    dependencies:
+      '@tradecanvas/commons': 1.1.0
+      '@tradecanvas/core': 1.1.0
+
+  '@tradecanvas/commons@1.1.0': {}
+
+  '@tradecanvas/core@1.1.0':
+    dependencies:
+      '@tradecanvas/commons': 1.1.0
 
   '@types/chai@5.2.3':
     dependencies:

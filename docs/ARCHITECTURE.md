@@ -8,8 +8,7 @@
 
 | Module | Route | What it does | Data |
 |---|---|---|---|
-| Thị trường | `/` | Reference prices of major assets in USD and VND (converted at the SBV central rate), 24h change, volume. Tagged "giá tham khảo". | Global aggregator API + SBV rate |
-| Chi tiết tài sản | `/tai-san/[symbol]` | Chart, supply, on-chain basics, links to official docs. No trade buttons. | Aggregator + public RPC |
+| Thị trường ✅ | `/`, `/tai-san/[symbol]` | Median reference price of 14 assets from 4 exchanges' USD fiat pairs (Coinbase, Kraken, Bitstamp, Gemini), VND at Vietcombank's USD transfer rate, 24h change, aggregated volume, source health. Detail page: `@tradecanvas/chart` candles via the same-origin proxy `/api/nen/[symbol]`. | Exchange public APIs + Vietcombank feed |
 | Trung tâm rủi ro | `/rui-ro` | Paste an address or contract and get a risk report: sanctions list hit, known-scam lists, token approvals, contract flags (honeypot/proxy/owner mint). Shows the methodology. | Public RPC, OFAC SDN, open scam lists |
 | Theo dõi ví công khai | `/vi` | Watch public addresses: balances and recent transfers. Watchlist stored in `localStorage` only. | Public RPC / indexer |
 | Pháp lý | `/phap-ly` | Readable tracker of Vietnamese crypto law with effective dates and source links, generated from `content/legal-tracker/`. | Repo content |
@@ -119,8 +118,9 @@ averosi-v2/
 
 | Need | Candidate | Notes |
 |---|---|---|
-| Global prices | CoinGecko public API | Attribution required; respect rate limits |
-| USD/VND | SBV central rate (sbv.gov.vn) | Label as the SBV rate; never OTC/USDT rates |
+| Spot prices | Coinbase, Kraken, Bitstamp, Gemini public APIs (USD fiat pairs) | Median of ≥1 sources; 1-source rows flagged; exchange names never linked (R11) |
+| USD/VND | Vietcombank public XML (USD transfer) | SBV site blocks bots; swap via `FxSource` when an official feed exists; never OTC/USDT rates |
+| Candles | Coinbase, Kraken fallback | Served through `/api/nen` so browsers never contact exchanges |
 | EVM reads | Public RPC / Alchemy free tier | Keys server-side only, from env |
 | Sanctions | OFAC SDN digital currency addresses | Public US data |
 | Scam lists | Open-source phishing/scam address lists | Check licence; show the list name in the report |

@@ -28,14 +28,14 @@ export const RISK_LISTS = {
 } as const;
 
 const EnvSchema = z.object({
-  RISK_DATA_MODE: z.enum(["live", "fixture"]).default("live"),
+  DATA_MODE: z.enum(["live", "fixture"]).default("live"),
   RPC_URL_ETHEREUM: z.url().default("https://ethereum-rpc.publicnode.com"),
   RPC_URL_BASE: z.url().default("https://base-rpc.publicnode.com"),
   RPC_URL_BSC: z.url().default("https://bsc-rpc.publicnode.com"),
 });
 
 const env = EnvSchema.parse({
-  RISK_DATA_MODE: process.env.RISK_DATA_MODE || undefined,
+  DATA_MODE: process.env.DATA_MODE || undefined,
   RPC_URL_ETHEREUM: process.env.RPC_URL_ETHEREUM || undefined,
   RPC_URL_BASE: process.env.RPC_URL_BASE || undefined,
   RPC_URL_BSC: process.env.RPC_URL_BSC || undefined,
@@ -65,9 +65,9 @@ function liveDeps() {
   };
 }
 
-/** `RISK_DATA_MODE=fixture` swaps in deterministic offline sources for e2e tests. */
+/** `DATA_MODE=fixture` swaps in deterministic offline sources for e2e tests. */
 export const riskService = createRiskService({
-  deps: env.RISK_DATA_MODE === "fixture" ? createFixtureDeps() : liveDeps(),
+  deps: env.DATA_MODE === "fixture" ? createFixtureDeps() : liveDeps(),
   ttlMs: REPORT_TTL_MS,
 });
 

@@ -1,11 +1,15 @@
 export * from "./domain/result";
 export * from "./domain/money";
 export * from "./domain/units";
+export * from "./domain/format";
 export * from "./domain/tax";
 export * from "./domain/address";
 export * from "./domain/chains";
 export * from "./domain/sourced";
 export * from "./domain/compliance";
 export * from "./domain/risk";
+export * from "./domain/market";
+export * from "./domain/assets";
 export * from "./application/usecases/checkAddressRisk";
+export * from "./application/usecases/getMarketOverview";
 export type * from "./application/ports/index";

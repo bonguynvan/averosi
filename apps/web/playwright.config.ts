@@ -16,6 +16,6 @@ export default defineConfig({
     reuseExistingServer: false,
     timeout: 120_000,
     // Deterministic offline risk data; never touches real RPC or list hosts in tests.
-    env: { RISK_DATA_MODE: "fixture" },
+    env: { DATA_MODE: "fixture" },
   },
 });
