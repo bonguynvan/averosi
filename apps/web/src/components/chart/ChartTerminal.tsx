@@ -94,6 +94,8 @@ export function ChartTerminal({ symbol, symbols }: ChartTerminalProps) {
           // Read-only: no trading overlay, order placement or depth ladder (LEGAL_REGISTER R1, R2).
           trading: false,
           depthLadder: false,
+          // Vietnamese UI chrome (toolbar, watchlist, settings…) and vi-VN number formatting.
+          locale: "vi",
           chartOptions: { numberLocale: "vi-VN" },
           onSymbolChange: (next) => {
             const url = new URL(window.location.href);
