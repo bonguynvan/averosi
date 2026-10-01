@@ -13,7 +13,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/vi", label: "Theo dõi ví", icon: "◎", ready: true },
   { href: "/thue", label: "Công cụ thuế 0,1%", icon: "%", ready: true },
   { href: "/phap-ly", label: "Pháp lý crypto VN", icon: "§", ready: true },
-  { href: "/kien-thuc", label: "Kiến thức", icon: "?", ready: false },
+  { href: "/kien-thuc", label: "Kiến thức", icon: "?", ready: true },
 ];
 
 export const FOOTER_LINKS: readonly { href: string; label: string }[] = [

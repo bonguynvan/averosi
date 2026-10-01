@@ -21,18 +21,48 @@ export function LivePricesProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<LiveState>({ status: "connecting", quotes: new Map() });
 
   useEffect(() => {
-    const source = new EventSource("/api/truc-tiep");
-    source.onopen = () => setState((s) => ({ ...s, status: "live" }));
-    source.onerror = () => setState((s) => ({ ...s, status: source.readyState === EventSource.CLOSED ? "offline" : "connecting" }));
-    source.addEventListener("prices", (event) => {
-      const updates = JSON.parse((event as MessageEvent<string>).data) as { symbol: string; priceUsd: number; at: number }[];
-      setState((s) => {
-        const quotes = new Map(s.quotes);
-        for (const u of updates) quotes.set(u.symbol, { priceUsd: u.priceUsd, at: u.at });
-        return { status: "live", quotes };
+    // EventSource retries dropped connections itself, but gives up for good on HTTP errors (429/5xx).
+    // Re-open with backoff so a restart or a brief limit never leaves the page permanently offline.
+    const BACKOFF_MS = [2_000, 5_000, 15_000, 30_000];
+    let source: EventSource | null = null;
+    let attempt = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let disposed = false;
+
+    const open = () => {
+      if (disposed) return;
+      const es = new EventSource("/api/truc-tiep");
+      source = es;
+      es.onopen = () => {
+        attempt = 0;
+        setState((s) => ({ ...s, status: "live" }));
+      };
+      es.onerror = () => {
+        if (es.readyState !== EventSource.CLOSED) {
+          setState((s) => ({ ...s, status: "connecting" }));
+          return;
+        }
+        es.close();
+        setState((s) => ({ ...s, status: attempt >= BACKOFF_MS.length ? "offline" : "connecting" }));
+        timer = setTimeout(open, BACKOFF_MS[Math.min(attempt, BACKOFF_MS.length - 1)]);
+        attempt += 1;
+      };
+      es.addEventListener("prices", (event) => {
+        const updates = JSON.parse((event as MessageEvent<string>).data) as { symbol: string; priceUsd: number; at: number }[];
+        setState((s) => {
+          const quotes = new Map(s.quotes);
+          for (const u of updates) quotes.set(u.symbol, { priceUsd: u.priceUsd, at: u.at });
+          return { status: "live", quotes };
+        });
       });
-    });
-    return () => source.close();
+    };
+
+    open();
+    return () => {
+      disposed = true;
+      clearTimeout(timer);
+      source?.close();
+    };
   }, []);
 
   return <LiveContext.Provider value={state}>{children}</LiveContext.Provider>;

@@ -15,7 +15,7 @@
 | Theo dõi ví công khai ✅ | `/vi` | Watchlist (≤20, localStorage, private notes) refreshed every minute via `POST /api/vi`: native balance + VND reference, USDT/USDC amounts (multicall), outgoing tx count with "+N mới", OFAC/phishing flags. "Watch my wallet" from the connected wallet. | Public RPC (server), shared risk lists |
 | Pháp lý ✅ | `/phap-ly`, `/phap-ly/[slug]` | Tracker of Vietnamese crypto law: status computed from effective dates (UTC+7), category filter via `?nhom=`, impacts, penalty tables, official sources, licensing status. | `content/phap-ly/*.md` (zod-validated) |
 | Công cụ thuế | `/thue` | 0.1% transfer-tax calculator (client-side, nothing stored). | Pure function |
-| Kiến thức | `/kien-thuc` | Education: self-custody safety, scam patterns, how the pilot market works. | MDX |
+| Kiến thức ✅ | `/kien-thuc`, `/kien-thuc/[slug]` | Education: self-custody, scam patterns (address poisoning, permit phishing, EIP-7702 drainers), pilot market, 0.1% tax, reading indicators, token approvals. Topic filter `?chu-de=`; articles link only to our own tools. | `content/kien-thuc/*.md` (zod-validated) |
 | Policies | `/mien-tru-trach-nhiem`, `/dieu-khoan`, `/quyen-rieng-tu` | Versioned legal pages. | `content/policies/` |
 
 ### Product pillars (owner direction, 2026-10-01)

@@ -18,7 +18,7 @@ Averosi ([averosi.com](https://averosi.com)) là công cụ xem dữ liệu bloc
 | Biểu đồ (`/bieu-do`): biểu đồ kỹ thuật đầy đủ (tradecanvas), chỉ đọc | ✅ |
 | Pháp lý (`/phap-ly`): 7 văn bản, trạng thái hiệu lực, nguồn chính thức | ✅ |
 | Theo dõi ví (`/vi`) + kết nối ví (chỉ đọc địa chỉ) | ✅ |
-| Kiến thức | 🚧 đang phát triển |
+| Kiến thức (`/kien-thuc`): 6 bài về an toàn ví, lừa đảo, pháp lý, thuế, chỉ báo, approval | ✅ |
 
 ## Phát triển
 
