@@ -42,6 +42,7 @@ MoF accepted 5/7 exchange dossiers (03/2026): VIX (VIXEX), Lộc Phát (LPEX), V
 | R6 Collect no personal data in v1 (no accounts, no email, no tracking cookies). Watchlists live in the browser. | L5 |
 | R7 Do not attach real-person identities to wallet addresses. Labels only for public entities with a cited public source (exchange hot wallets, sanctioned addresses). | L5, L3 (data) |
 | R8 Every page shows the disclaimer bar; every price shows source + timestamp + "tham khảo". | R3, R4 |
+| R12 Wallet connection (owner decision 2026-10-01): connecting an injected wallet (EIP-6963) is allowed **to read the visitor's own address and network only**. Signing is allowed only for visitor-initiated, fee-free actions on their own assets that run entirely in the browser (e.g. revoking token approvals). Never request seed phrases, never move funds, swap, bridge or relay transactions, never take a fee. The UI must state this next to every connect button. | R1, R2, R3 |
 | R11 Until a licensed VN exchange publishes market data, prices come from foreign exchanges' public **USD fiat** pairs (never USDT), aggregated by median. Exchange names appear only as data attribution: no links, logos, referral or "where to buy". The visitor's browser never contacts an exchange. | R3, owner decision 2026-10-01 |
 | R9 No Telegram/Zalo bots that relay trading signals. | L7, R4 |
 | R10 Do not issue tokens/NFTs or run airdrops. | L2, L3 |
@@ -77,6 +78,7 @@ MoF accepted 5/7 exchange dossiers (03/2026): VIX (VIXEX), Lộc Phát (LPEX), V
 ## Change log
 
 - 2026-10-01 — Initial register.
+- 2026-10-01 — Public-wallet watch (/vi) and read-only wallet connection (wagmi, injected/EIP-6963) added under new rule R12. Stablecoin balances are shown as amounts only (no USDT→VND conversion, R2). Privacy policy v0.5.0.
 - 2026-10-01 — Public legal tracker (/phap-ly) launched from `content/phap-ly`. Instrument numbers verified: Luật 71/2025/QH15, Luật 91/2025/QH15, Luật 109/2025/QH15, NQ 05/2025/NQ-CP, NĐ 356/2025/NĐ-CP, NĐ 284/2026/NĐ-CP, TT 32/2026/TT-BTC (VAT-exempt, 20% CIT for organisations). Landing page added. Highlights avoid "top gainers".
 - 2026-10-01 — Market module: owner approved using major foreign exchanges' public data while no VN exchange is licensed (no revenue, no transactions). Added R11. FX switched from SBV central rate (not machine-accessible) to Vietcombank's published rate, disclosed on every market view.
 - 2026-10-01 — Re-checked before building /rui-ro: no new instrument; no exchange licensed yet; added third-party data table. Commentary on NĐ 284 (LuatVietnam) treats informational/analytical content as distinct from service provision. Open question about the risk checker remains.

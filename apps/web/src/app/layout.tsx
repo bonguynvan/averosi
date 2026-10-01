@@ -5,6 +5,7 @@ import { LegalBar } from "@/components/layout/LegalBar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { ShellMetrics } from "@/components/layout/ShellMetrics";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
+import { Web3Provider } from "@/components/web3/Web3Provider";
 import { SideNav } from "@/components/layout/SideNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -28,6 +29,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang="vi" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body className="flex min-h-dvh flex-col">
+        <Web3Provider>
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-accent focus:px-3 focus:py-2 focus:text-text-on-accent"
@@ -49,6 +51,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           </main>
         </div>
         <SiteFooter />
+        </Web3Provider>
       </body>
     </html>
   );

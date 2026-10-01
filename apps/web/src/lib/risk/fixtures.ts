@@ -1,4 +1,5 @@
 import { type AccountProfile, type CheckAddressRiskDeps, sourced } from "@app/core";
+import { STABLE_TOKENS, type TokenReader } from "../wallet/portfolio";
 
 /**
  * Deterministic offline sources for e2e tests (DATA_MODE=fixture). Never enabled by default.
@@ -39,3 +40,13 @@ export function createFixtureDeps(): CheckAddressRiskDeps {
     },
   };
 }
+
+/** Fixture stablecoin balances: first token 1,234.5, second token failed (null). */
+export const FIXTURE_TOKENS: TokenReader = {
+  balances: async (chain) =>
+    sourced(
+      STABLE_TOKENS[chain].map((t, i) => ({ symbol: t.symbol, contract: t.address, decimals: t.decimals, balance: i === 0 ? 1_234_500_000n * 10n ** BigInt(t.decimals - 6) : null })),
+      `RPC ${chain}`,
+      AT,
+    ),
+};

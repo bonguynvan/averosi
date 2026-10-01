@@ -4,7 +4,8 @@ import { type Chain, createPublicClient, http } from "viem";
 import { base, bsc, mainnet } from "viem/chains";
 import { z } from "zod";
 import { type RpcClient, createChainReader } from "./chainReader";
-import { createFixtureDeps } from "./fixtures";
+import { type MulticallClient, createTokenReader, createWalletService } from "../wallet/portfolio";
+import { FIXTURE_TOKENS, createFixtureDeps } from "./fixtures";
 import { createRateLimiter } from "./rateLimit";
 import { createRemoteAddressList } from "./remoteAddressList";
 import { createRiskService } from "./service";
@@ -47,12 +48,13 @@ const CHAIN_CONFIG: Record<ChainKey, { chain: Chain; url: string }> = {
   bsc: { chain: bsc, url: env.RPC_URL_BSC },
 };
 
-const clients = new Map<ChainKey, RpcClient>();
-function clientFor(key: ChainKey): RpcClient {
+type ChainClient = RpcClient & MulticallClient;
+const clients = new Map<ChainKey, ChainClient>();
+function clientFor(key: ChainKey): ChainClient {
   const existing = clients.get(key);
   if (existing) return existing;
   const { chain, url } = CHAIN_CONFIG[key];
-  const client: RpcClient = createPublicClient({ chain, transport: http(url, { timeout: RPC_TIMEOUT_MS, retryCount: 1 }) });
+  const client = createPublicClient({ chain, transport: http(url, { timeout: RPC_TIMEOUT_MS, retryCount: 1 }) }) as unknown as ChainClient;
   clients.set(key, client);
   return client;
 }
@@ -65,11 +67,20 @@ function liveDeps() {
   };
 }
 
-/** `DATA_MODE=fixture` swaps in deterministic offline sources for e2e tests. */
-export const riskService = createRiskService({
-  deps: env.DATA_MODE === "fixture" ? createFixtureDeps() : liveDeps(),
-  ttlMs: REPORT_TTL_MS,
+/** `DATA_MODE=fixture` swaps in deterministic offline sources for e2e tests. Shared by the risk center and wallet watch. */
+const sources = env.DATA_MODE === "fixture" ? createFixtureDeps() : liveDeps();
+
+export const riskService = createRiskService({ deps: sources, ttlMs: REPORT_TTL_MS });
+
+/** Public-wallet snapshots for /vi: fresher cache (30s) than risk reports. */
+export const walletService = createWalletService({
+  ...sources,
+  tokens: env.DATA_MODE === "fixture" ? FIXTURE_TOKENS : createTokenReader({ clientFor }),
+  ttlMs: 30_000,
 });
+
+/** Wallet refreshes: a full 20-wallet watchlist every minute fits comfortably. */
+export const walletRateLimiter = createRateLimiter({ limit: 20, windowMs: 60_000 });
 
 /** 10 checks per minute per client. */
 export const riskRateLimiter = createRateLimiter({ limit: 10, windowMs: 60_000 });

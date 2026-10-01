@@ -12,7 +12,8 @@ export async function GET() {
       priceUsd: Number(a.priceUsdMicros) / MICROS,
       change24hBps: a.change24hBps,
     }));
-    return NextResponse.json({ quotes }, { headers: { "cache-control": "public, max-age=60" } });
+    const vndPerUsd = overview.fx.status === "ok" ? Number(overview.fx.rateVnd) : null;
+    return NextResponse.json({ quotes, vndPerUsd }, { headers: { "cache-control": "public, max-age=60" } });
   } catch {
     return NextResponse.json({ error: "UNAVAILABLE" }, { status: 503 });
   }

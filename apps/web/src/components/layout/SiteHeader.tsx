@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BRAND } from "@/lib/brand";
+import { ConnectWallet } from "../web3/ConnectWallet";
 import { Logo } from "./Logo";
 
 export function SiteHeader() {
@@ -8,7 +9,10 @@ export function SiteHeader() {
       <Link href="/" aria-label={`${BRAND.name} — trang chủ`} className="shrink-0">
         <Logo />
       </Link>
-      <span className="label-caps border border-outline bg-surface px-2 py-0.5 text-accent">Read-only</span>
+      <div className="flex items-center gap-3">
+        <span className="label-caps hidden border border-outline bg-surface px-2 py-0.5 text-accent sm:inline">Read-only</span>
+        <ConnectWallet />
+      </div>
     </header>
   );
 }

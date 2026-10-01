@@ -60,6 +60,10 @@ Rules:
 - The sticky shell (`#shell-top`, `--ds-shell-top` from `ShellMetrics`) and thin token scrollbars are unchanged.
 - Never use a root `loading.tsx`: wrap slow data in `<Suspense>` after `notFound()` checks.
 
+## Performance budget
+
+Measured compressed JS per page: `/`, `/thi-truong`, `/vi` about 230 KB (budget 300 KB). `/bieu-do` about 350 KB is an accepted exception: it is the full chart terminal, and the tradecanvas widget loads lazily there. Client-side modules avoid zod and other server-oriented libraries (see `lib/wallet/watchlist.ts`).
+
 ## Accessibility
 
 - `--color-text-faint` (#737373) is ~4.4:1 on black — metadata only, never body text.

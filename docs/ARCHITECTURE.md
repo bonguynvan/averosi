@@ -12,7 +12,7 @@
 | Biểu đồ ✅ | `/bieu-do?ma=` | Full-bleed tradecanvas `ChartWidget`: toolbar, indicators, drawings, chart types, settings, watchlist (fed from `/api/thi-truong`), alerts, replay, share-URL, layouts in localStorage. Read-only (`trading: false`, no depth ladder). Data via a `PollingAdapter` → `/api/nen` (1m/5m/15m/1h/1d, per-timeframe cache). Chrome themed via `--tcw-*` → tokens. | Exchange candles through our proxy |
 | Thị trường ✅ | `/thi-truong`, `/tai-san/[symbol]` | Median reference price of 14 assets from 4 exchanges' USD fiat pairs (Coinbase, Kraken, Bitstamp, Gemini), VND at Vietcombank's USD transfer rate, 24h change, aggregated volume, source health. Detail page: `@tradecanvas/chart` candles via the same-origin proxy `/api/nen/[symbol]`. | Exchange public APIs + Vietcombank feed |
 | Trung tâm rủi ro | `/rui-ro` | Paste an address or contract and get a risk report: sanctions list hit, known-scam lists, token approvals, contract flags (honeypot/proxy/owner mint). Shows the methodology. | Public RPC, OFAC SDN, open scam lists |
-| Theo dõi ví công khai | `/vi` | Watch public addresses: balances and recent transfers. Watchlist stored in `localStorage` only. | Public RPC / indexer |
+| Theo dõi ví công khai ✅ | `/vi` | Watchlist (≤20, localStorage, private notes) refreshed every minute via `POST /api/vi`: native balance + VND reference, USDT/USDC amounts (multicall), outgoing tx count with "+N mới", OFAC/phishing flags. "Watch my wallet" from the connected wallet. | Public RPC (server), shared risk lists |
 | Pháp lý ✅ | `/phap-ly`, `/phap-ly/[slug]` | Tracker of Vietnamese crypto law: status computed from effective dates (UTC+7), category filter via `?nhom=`, impacts, penalty tables, official sources, licensing status. | `content/phap-ly/*.md` (zod-validated) |
 | Công cụ thuế | `/thue` | 0.1% transfer-tax calculator (client-side, nothing stored). | Pure function |
 | Kiến thức | `/kien-thuc` | Education: self-custody safety, scam patterns, how the pilot market works. | MDX |
@@ -141,7 +141,7 @@ Every adapter returns `{ data, source, fetchedAt }` so the UI can always attribu
 - Per-client limits (risk checks, candle API, live streams) key on `cf-connecting-ip` / `x-forwarded-for`. **The reverse proxy must set these headers.** Without them, all visitors share one key: rate limits become global, and live streams fall back to a global cap of 500.
 
 
-- Read-only by construction: no private-key code paths, no `eth_sendTransaction`, no wallet connect in v1.
+- Read-only by construction: no private-key code paths and no transaction relaying. Wallet connection (wagmi, injected connector, EIP-6963 discovery) only reads the visitor's address and network. Browser RPC goes through the visitor's wallet (`unstable_connector`). Signing is limited by R12.
 - Strict CSP with a per-request nonce (`apps/web/src/proxy.ts`), so all pages render dynamically. Fonts are self-hosted by `next/font`, and there are no third-party scripts.
 - No user-generated HTML. Addresses are validated (`isAddress`) before any RPC call.
 - Secrets only in env and checked at startup with zod. `.env*` is git-ignored.

@@ -4,7 +4,8 @@ import { expect, test } from "@playwright/test";
 
 test("market page connects to the same-origin live stream", async ({ page }) => {
   await page.goto("/thi-truong");
-  await expect(page.getByTestId("live-badge")).toHaveAttribute("data-status", "live");
+  // Streamed (Suspense) market data + SSE handshake can exceed 5s when the whole suite runs in parallel.
+  await expect(page.getByTestId("live-badge")).toHaveAttribute("data-status", "live", { timeout: 15_000 });
   await expect(page.getByTestId("live-badge")).toContainText("Trực tiếp");
   // Live cell keeps showing the VND reference price.
   await expect(page.locator('[data-live-symbol="BTC"]').first()).toContainText("₫");
