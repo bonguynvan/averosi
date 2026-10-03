@@ -70,6 +70,8 @@ export function LivePricesProvider({ children }: { children: ReactNode }) {
 
 export const useLiveStatus = () => useContext(LiveContext).status;
 export const useLiveQuote = (symbol: string) => useContext(LiveContext).quotes.get(symbol);
+/** All live quotes received so far (symbol → latest), for widgets that show many assets at once. */
+export const useLiveQuotes = () => useContext(LiveContext).quotes;
 
 /** Status chip: "● Trực tiếp" while streaming. */
 export function LiveBadge() {

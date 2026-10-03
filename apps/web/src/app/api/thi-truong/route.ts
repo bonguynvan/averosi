@@ -1,19 +1,12 @@
 import { NextResponse } from "next/server";
-import { marketOverview } from "@/lib/market/instance";
+import { assetNames, marketOverview } from "@/lib/market/instance";
+import { toQuotesDto } from "@/lib/market/quotesDto";
 
-const NANOS = 1_000_000_000;
-
-/** Compact reference quotes (USD) for client widgets such as the chart watchlist. Same data as /thi-truong. */
+/** Compact reference quotes (USD) for client widgets: chart watchlist, live market grid. Same data as /thi-truong. */
 export async function GET() {
   try {
-    const overview = await marketOverview();
-    const quotes = overview.assets.map((a) => ({
-      symbol: a.symbol,
-      priceUsd: Number(a.priceUsdNanos) / NANOS,
-      change24hBps: a.change24hBps,
-    }));
-    const vndPerUsd = overview.fx.status === "ok" ? Number(overview.fx.rateVnd) : null;
-    return NextResponse.json({ quotes, vndPerUsd }, { headers: { "cache-control": "public, max-age=60" } });
+    const [overview, names] = await Promise.all([marketOverview(), assetNames()]);
+    return NextResponse.json(toQuotesDto(overview, names), { headers: { "cache-control": "public, max-age=15" } });
   } catch {
     return NextResponse.json({ error: "UNAVAILABLE" }, { status: 503 });
   }

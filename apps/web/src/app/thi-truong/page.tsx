@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { MarketBoard } from "@/components/market/MarketBoard";
 import { MarketFilters, MarketPagination } from "@/components/market/MarketControls";
 import { LiveBadge, LivePricesProvider } from "@/components/market/LivePrices";
 import { MarketNotice } from "@/components/market/MarketNotice";
@@ -33,7 +34,7 @@ async function MarketContent({ query }: { query: MarketQuery }) {
                 Dữ liệu tạm thời không khả dụng. Không có số liệu nào được hiển thị thay thế.
               </p>
             ) : (
-              <>
+              <MarketBoard>
                 <MarketFilters query={query} total={page.total} />
                 {page.rows.length === 0 ? (
                   <p role="status" className="py-6 text-center text-[13px] text-text-muted">
@@ -43,7 +44,7 @@ async function MarketContent({ query }: { query: MarketQuery }) {
                   <MarketTable assets={page.rows} names={names} vndPerUsd={vndPerUsd} firstRank={page.offset} />
                 )}
                 <MarketPagination query={query} page={page} />
-              </>
+              </MarketBoard>
             )}
             <div className="mt-3 border-t border-outline-subtle pt-3">
               <SourceStatusList sources={overview.sources} fx={overview.fx} />

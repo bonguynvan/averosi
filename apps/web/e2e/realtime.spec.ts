@@ -7,8 +7,9 @@ test("market page connects to the same-origin live stream", async ({ page }) => 
   // Streamed (Suspense) market data + SSE handshake can exceed 5s when the whole suite runs in parallel.
   await expect(page.getByTestId("live-badge")).toHaveAttribute("data-status", "live", { timeout: 15_000 });
   await expect(page.getByTestId("live-badge")).toContainText("Trực tiếp");
-  // Live cell keeps showing the VND reference price.
-  await expect(page.locator('[data-live-symbol="BTC"]').first()).toContainText("₫");
+  // The live grid keeps showing the VND reference price.
+  const btc = page.getByTestId("market-grid").getByRole("row").filter({ has: page.getByRole("link", { name: /^BTC/ }) });
+  await expect(btc).toContainText("₫");
 });
 
 test("asset page shows raw technical indicators (no signals)", async ({ page }) => {

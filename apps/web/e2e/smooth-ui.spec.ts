@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test.describe("desktop shell", () => {
   test.use({ viewport: { width: 1280, height: 640 } });
 
-  test("legal bar, sidebar and table header stay pinned while the page scrolls", async ({ page }) => {
+  test("legal bar and sidebar stay pinned while the page scrolls", async ({ page }) => {
     await page.goto("/thi-truong");
     const readShellTop = () => page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ds-shell-top")) || 0);
     // Published by ShellMetrics after hydration.
@@ -20,9 +20,6 @@ test.describe("desktop shell", () => {
 
     const nav = await page.getByRole("navigation", { name: "Điều hướng chính", exact: true }).boundingBox();
     expect(Math.round(nav?.y ?? -1)).toBe(Math.round(shellTop));
-
-    const th = await page.getByTestId("market-table").getByRole("columnheader", { name: "Giá VNĐ" }).boundingBox();
-    expect(Math.round(th?.y ?? -1)).toBe(Math.round(shellTop));
   });
 
   test("collapsible panels toggle with proper ARIA state; legal notices are not collapsible", async ({ page }) => {

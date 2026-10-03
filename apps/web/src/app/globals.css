@@ -185,3 +185,42 @@
   --tcw-radius-lg: 0;
   --tcw-radius-xl: 0;
 }
+
+/* Live market grid (bo-grid renders to light DOM). */
+.ds-market-grid .ds-grid-asset {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+  color: var(--ds-color-text);
+  text-decoration: none;
+}
+.ds-market-grid .ds-grid-asset:hover .ds-grid-symbol,
+.ds-market-grid .ds-grid-asset:focus-visible .ds-grid-symbol {
+  color: var(--ds-color-accent);
+}
+.ds-market-grid .ds-grid-symbol {
+  font-weight: 600;
+}
+.ds-market-grid .ds-grid-name {
+  overflow: hidden;
+  font-size: 11px;
+  color: var(--ds-color-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ds-market-grid .ds-grid-price {
+  color: var(--ds-color-accent-soft);
+}
+.ds-market-grid .ds-grid-up {
+  color: var(--ds-color-up);
+}
+.ds-market-grid .ds-grid-down {
+  color: var(--ds-color-down);
+}
+.ds-market-grid .ds-grid-warn {
+  color: var(--ds-color-warning);
+}
+.ds-market-grid .ds-grid-dim {
+  color: var(--ds-color-text-muted);
+}
